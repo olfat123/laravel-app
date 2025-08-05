@@ -12,20 +12,26 @@ use Illuminate\Support\Str;
 use Filament\Facades\Filament;
 use App\Enums\ProductStatusEnum;
 use Filament\Resources\Resource;
+use Filament\Resources\Pages\Page;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Pages\SubNavigationPosition;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\ProductResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ProductResource\RelationManagers;
+use App\Filament\Resources\ProductResource\Pages\EditProduct;
+use App\Filament\Resources\ProductResource\Pages\ProductImages;
+use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-queue-list';
 
+    protected static SubNavigationPosition $subNavigationPosition = SubNavigationPosition::End;
     public static function form(Form $form): Form
     {
         return $form
@@ -103,6 +109,13 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
+                SpatieMediaLibraryImageColumn::make('images')
+                    ->collection('images')
+                    ->conversion('thumb')
+                    ->limit(1)
+                    ->label(__('Image'))
+                    ->circular()
+                    ->size(50),
                 Tables\Columns\TextColumn::make('title')
                     ->sortable()
                     ->words(10)
@@ -149,9 +162,17 @@ class ProductResource extends Resource
             'index' => Pages\ListProducts::route('/'),
             'create' => Pages\CreateProduct::route('/create'),
             'edit' => Pages\EditProduct::route('/{record}/edit'),
+            'images' => Pages\ProductImages::route('/{record}/images'),
         ];
     }
 
+    public static function getRecordSubNavigation(Page $page): array
+    {
+        return  $page->generateNavigationItems([
+                EditProduct::class,
+                ProductImages::class
+        ]);
+    }
     public static function canViewAny(): bool
     {
         return Filament::auth()->user()->hasRole(RolesEnum::Vendor);
