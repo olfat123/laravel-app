@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Enums\ProductStatusEnum;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Product extends Model implements HasMedia
@@ -39,8 +41,23 @@ class Product extends Model implements HasMedia
         return $this->belongsTo(Category::class);
     }
 
-    public function brand()
+    public function variationTypes(): HasMany
     {
-        return $this->belongsTo(Brand::class);
+        return $this->hasMany(VariationType::class, 'product_id');
+    }
+
+    public function variations(): HasMany
+    {
+        return $this->hasMany(ProductVariation::class, 'product_id');
+    }
+
+    public function scopeForVendor(Builder $query): Builder
+    {
+        return $query->where('created_by', auth()->user()->id);
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', ProductStatusEnum::PUBLISHED);
     }
 }

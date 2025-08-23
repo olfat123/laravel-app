@@ -20,10 +20,12 @@ use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\ProductResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Filament\Resources\ProductResource\Pages\EditProduct;
 use App\Filament\Resources\ProductResource\Pages\ProductImages;
-use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
+use App\Filament\Resources\ProductResource\Pages\ProductVariations;
+use App\Filament\Resources\ProductResource\Pages\ProductVariationTypes;
 
 class ProductResource extends Resource
 {
@@ -32,6 +34,13 @@ class ProductResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-queue-list';
 
     protected static SubNavigationPosition $subNavigationPosition = SubNavigationPosition::End;
+    
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([SoftDeletingScope::class])
+            ->forVendor();
+    }
     public static function form(Form $form): Form
     {
         return $form
@@ -163,6 +172,8 @@ class ProductResource extends Resource
             'create' => Pages\CreateProduct::route('/create'),
             'edit' => Pages\EditProduct::route('/{record}/edit'),
             'images' => Pages\ProductImages::route('/{record}/images'),
+            'variation_types' => Pages\ProductVariationTypes::route('/{record}/variation-types'),
+            'variations' => Pages\ProductVariations::route('/{record}/variations'),
         ];
     }
 
@@ -170,7 +181,9 @@ class ProductResource extends Resource
     {
         return  $page->generateNavigationItems([
                 EditProduct::class,
-                ProductImages::class
+                ProductImages::class,
+                ProductVariationTypes::class,
+                ProductVariations::class,
         ]);
     }
     public static function canViewAny(): bool

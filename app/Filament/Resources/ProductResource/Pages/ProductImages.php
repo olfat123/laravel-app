@@ -12,7 +12,7 @@ use Filament\Forms\Form;
 class ProductImages extends EditRecord
 {
     protected static string $resource = ProductResource::class;
-
+    protected static ?string $title = 'Images';
     protected static ?string $navigationIcon = 'heroicon-o-photo';
     public function form(Form $form): Form
     {
@@ -20,7 +20,7 @@ class ProductImages extends EditRecord
             ->schema([
                 SpatieMediaLibraryFileUpload::make('images')
                     ->collection('images')
-                    ->label(__('Product Images'))
+                    ->label(false)
                     ->multiple()
                     ->maxFiles(10)
                     ->image()
