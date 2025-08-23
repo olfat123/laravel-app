@@ -4,16 +4,17 @@ namespace App\Filament\Resources\ProductResource\Pages;
 
 use Dom\Text;
 use Filament\Actions;
+use Filament\Pages\Actions\SaveAction;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
 use App\Enums\ProductVariationTypeEnum;
 use Filament\Forms\Components\Repeater;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\EditRecord;
 use App\Filament\Resources\ProductResource;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
-use Illuminate\Database\Eloquent\Model;
 
 class ProductVariations extends EditRecord
 {
@@ -24,6 +25,7 @@ class ProductVariations extends EditRecord
     public function form(Form $form): Form
     {
         $types = $this->record->variationTypes;
+        //dd($this->record->variations);
         $fields = [];
         foreach ($types as $type) {
             $fields[] = TextInput::make('variation_type_' . $type->id . '.id')
@@ -40,7 +42,7 @@ class ProductVariations extends EditRecord
                 Repeater::make('variations')
                     ->label(false)
                     ->collapsible()
-                    ->defaultItems(1)
+                    ->defaultItems(0)
                     ->addActionLabel(__('Add new variation'))
                     ->columns(2)
                     ->columnSpan(2)
@@ -66,14 +68,51 @@ class ProductVariations extends EditRecord
     {
         return [
             Actions\DeleteAction::make(),
+            Actions\Action::make('generateAllVariations')
+                ->label('Generate All Variations')
+                ->icon('heroicon-o-plus')
+                ->action(function (array $data, $livewire) {
+                    $variationTypes = $this->record->variationTypes;
+                    $cartesian = $this->cartesianProduct($variationTypes, $this->record->quantity ?? 1, $this->record->price ?? 0);
+
+                    // Set the repeater value
+                    $livewire->form->fill([
+                        'variations' => $cartesian,
+                    ]);
+                }),
         ];
     }
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $variations = $this->record->variations->toArray();
-        $variationTypes = $this->record->variationTypes;
-        $data['variations'] = $this->mergeCartesianWithExisting($variationTypes, $variations);
+        $types = $this->record->variationTypes;
+        $existing = $this->record->variations->toArray();
+        $variations = [];
+
+        foreach ($existing as $variation) {
+            $item = [
+                'id' => $variation['id'] ?? null,
+                'quantity' => $variation['quantity'] ?? 1,
+                'price' => $variation['price'] ?? 0,
+            ];
+
+            $optionIds = is_string($variation['variation_type_option_ids'])
+                ? json_decode($variation['variation_type_option_ids'], true)
+                : $variation['variation_type_option_ids'];
+
+            foreach ($types as $idx => $type) {
+                $optionId = $optionIds[$idx] ?? null;
+                $option = $type->options->firstWhere('id', $optionId);
+                $item['variation_type_' . $type->id] = [
+                    'id' => $optionId,
+                    'name' => $option ? $option->name : null,
+                    'label' => $type->name,
+                ];
+            }
+            $variations[] = $item;
+        }
+
+        $data['variations'] = $variations;
         return $data;
     }
 
@@ -146,15 +185,20 @@ class ProductVariations extends EditRecord
         $formattedVariations = [];
         foreach ($data['variations'] as $option) {
             $optionIds = [];
-            foreach ($this->record->variationTypes as $key => $variationType) {
-                if (isset($option['variation_type_' . $variationType->id]['id'])) {
-                    $optionIds[] = $option['variation_type_' . $variationType->id]['id'];
+            foreach ($this->record->variationTypes as $variationType) {
+                $variationKey = 'variation_type_' . $variationType->id;
+                if (
+                    isset($option[$variationKey]) &&
+                    isset($option[$variationKey]['id']) &&
+                    $option[$variationKey]['id'] !== null
+                ) {
+                    $optionIds[] = $option[$variationKey]['id'];
                 }
             }
-            $quantity = $option['quantity'];
-            $price = $option['price'];
+            $quantity = $option['quantity'] ?? 1;
+            $price = $option['price'] ?? 0;
             $formattedVariations[] = [
-                'id' => $option['id'],
+                'id' => $option['id'] ?? null,
                 'variation_type_option_ids' => json_encode($optionIds),
                 'quantity' => $quantity,
                 'price' => $price,
