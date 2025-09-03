@@ -1,3 +1,167 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+#app {
+    height: 100%;
+}
+
+.wysiwyg > blockquote,
+.wysiwyg > dl,
+.wysiwyg > dd,
+.wysiwyg > h1,
+.wysiwyg > h2,
+.wysiwyg > h3,
+.wysiwyg > h4,
+.wysiwyg > h5,
+.wysiwyg > h6,
+.wysiwyg > hr,
+.wysiwyg > figure,
+.wysiwyg > p,
+.wysiwyg > pre {
+    margin: revert;
+}
+
+.wysiwyg > ol,
+.wysiwyg > ul {
+    list-style: revert;
+    margin: revert;
+    padding: revert;
+}
+
+.wysiwyg > table {
+    border-collapse: revert;
+}
+
+.wysiwyg > h1,
+.wysiwyg > h2,
+.wysiwyg > h3,
+.wysiwyg > h4,
+.wysiwyg > h5,
+.wysiwyg > h6 {
+    font-size: revert;
+    font-weight: revert;
+}
+
+.wysiwyg a {
+    text-decoration: underline;
+    color: #4b9afa;
+}
+
+.wysiwyg-output > blockquote,
+.wysiwyg-output > dl,
+.wysiwyg-output > dd,
+.wysiwyg-output > h1,
+.wysiwyg-output > h2,
+.wysiwyg-output > h3,
+.wysiwyg-output > h4,
+.wysiwyg-output > h5,
+.wysiwyg-output > h6,
+.wysiwyg-output > hr,
+.wysiwyg-output > figure,
+.wysiwyg-output > p,
+.wysiwyg-output > pre {
+    margin: revert;
+}
+
+.wysiwyg-output > *:last-child {
+    margin-bottom: 0;
+}
+
+.wysiwyg-output > ol,
+.wysiwyg-output > ul {
+    list-style: revert;
+    margin: revert;
+    padding: revert;
+}
+
+.wysiwyg-output > table {
+    border-collapse: revert;
+}
+
+.wysiwyg-output > h1,
+.wysiwyg-output > h2,
+.wysiwyg-output > h3,
+.wysiwyg-output > h4,
+.wysiwyg-output > h5,
+.wysiwyg-output > h6 {
+    font-size: revert;
+    font-weight: revert;
+}
+
+.wysiwyg-output blockquote {
+    border-left: 5px solid #ccc;
+    font-style: italic;
+    margin-left: 0;
+    margin-right: 0;
+    overflow: hidden;
+    padding-left: 1.5em;
+    padding-right: 1.5em;
+}
+
+.wysiwyg-output a {
+    text-decoration: #4b9afa;
+    color: blue;
+}
+
+.wysiwyg-output a.hashtag {
+    background-color: #eaf4ff;
+    color: #4156e2;
+}
+
+/* WebKit browsers (Chrome, Safari) */
+::-webkit-scrollbar {
+    width: 8px;
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #a2c3de; /* Thumb color */
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #f1f1f3; /* Track color */
+}
+
+
+html.dark ::-webkit-scrollbar {
+    width: 8px;
+    background-color: transparent;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+    background-color: #031a25; /* Thumb color */
+    border-radius: 6px;
+}
+
+html.dark ::-webkit-scrollbar-track {
+    background-color: #0a2d3e; /* Track color */
+}
+
+html.dark .ck-reset_all :not(.ck-reset_all-excluded *),
+html.dark .ck.ck-reset_all {
+    color: white;
+}
+
+html.dark .ck.ck-toolbar {
+    background-color: rgb(30, 41, 59);
+}
+
+html.dark .ck.ck-button:not(.ck-disabled):hover,
+html.dark a.ck.ck-button:not(.ck-disabled):hover,
+html.dark .ck.ck-button:not(.ck-disabled):active,
+html.dark a.ck.ck-button:not(.ck-disabled):active,
+html.dark .ck.ck-button.ck-on,
+html.dark a.ck.ck-button.ck-on{
+    background-color: rgb(15, 23, 42);
+}
+
+html.dark .ck.ck-editor__main>.ck-editor__editable {
+    background-color: rgb(30, 41, 59);
+    color: white;
+}
+
+html.dark .ck.ck-list {
+    background-color: rgb(30, 41, 59);
+}

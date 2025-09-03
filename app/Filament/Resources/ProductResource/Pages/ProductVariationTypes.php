@@ -60,7 +60,7 @@ class ProductVariationTypes extends EditRecord
                                     ->collection('images')
                                     ->panelLayout('grid')
                                     ->preserveFilenames()
-                                    ->maxFiles(1),
+                                    ->maxFiles(10),
                             ])
                             ->columnSpan(2)
                     ])
