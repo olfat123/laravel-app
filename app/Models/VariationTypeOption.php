@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\VariationType;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -26,6 +28,11 @@ class VariationTypeOption extends Model implements HasMedia
         $this->addMediaConversion('large')
             ->width(1200)
             ->sharpen(10);
+    }
+
+    public function variationType(): BelongsTo
+    {
+        return $this->belongsTo(VariationType::class);
     }
 
 }

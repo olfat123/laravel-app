@@ -2,10 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use App\Enums\RolesEnum;
 use App\Models\User;
+use App\Models\Vendor;
+use App\Enums\RolesEnum;
+use App\Enums\VendorStatusEnum;
+use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class UsersSeeder extends Seeder
 {
@@ -26,7 +28,13 @@ class UsersSeeder extends Seeder
             'email' => 'vendor@example.com',
         ]);
 
-        $vendor->assignRole(RolesEnum::Vendor->value);  
+        $vendor->assignRole(RolesEnum::Vendor->value); 
+        Vendor::factory()->create([
+            'user_id' => $vendor->id,
+            'status' => VendorStatusEnum::APPROVED,
+            'store_name' => 'Vendor Store',
+            'store_address' => '123 Vendor St, City, Country',
+        ]); 
 
         $customer = User::factory()->create([
             'name' => 'Customer',

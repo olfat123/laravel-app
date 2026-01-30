@@ -12,7 +12,7 @@ class ProductController extends Controller
 {
     public function home()
     {
-        $products = Product::query()->active()->paginate(10);      
+        $products = Product::query()->forWebsite()->paginate(10);      
         return Inertia::render('Home', [
             'products' => ProductListResource::collection($products),
         ]);

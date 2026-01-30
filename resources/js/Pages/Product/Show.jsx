@@ -11,9 +11,9 @@ import Carousel from '@/Components/Carousel';
 import { Head } from '@inertiajs/react';
 
 export default function Show({ product, variationOptions }) {
-    console.log(product, variationOptions);
     const form = useForm({
-        option_ids: [...variationOptions.map((option) => option.id)],
+        product_id: product.id,
+        option_ids: Object.values(variationOptions || {}),
         quantity: 1,
         price: product.price | null
     });
