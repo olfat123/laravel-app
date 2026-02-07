@@ -11,5 +11,5 @@ export default function CurrencyFormatter(
         currency: currency,
     }).format(amount);
 
-    return <span className="text-2xl">{formattedAmount}</span>;
+    return <span className="text-l font-semibold">{formattedAmount}</span>;
 }

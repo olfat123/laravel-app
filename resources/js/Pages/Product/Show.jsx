@@ -57,15 +57,19 @@ export default function Show({ product, variationOptions }) {
     }, [product, selectedOptions]);
 
     useEffect(() => {
-        for ( let type of product.variationTypes) {
-            const selectedOptionId = variationOptions[type.id ];
+        if (!variationOptions) return;
+
+        for (let type of product.variationTypes) {
+            const selectedOptionId = variationOptions[type.id];
+            const selectedId = selectedOptionId ? Number(selectedOptionId) : null;
+
             chooseOption(
                 type.id,
-                type.options.find((op) => op.id === selectedOptionId) || type.options[0],
+                type.options.find((op) => op.id === selectedId) || type.options[0],
                 false
             );
         }
-    }, []);
+    }, [variationOptions, product.variationTypes]);
 
     const getOptionIdsMap = (newOptions) => {
         return Object.fromEntries(
@@ -227,7 +231,5 @@ export default function Show({ product, variationOptions }) {
                 </div>
             </div>
         </AuthenticatedLayout>
-        
-
     );
 }

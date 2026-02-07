@@ -11,9 +11,13 @@ class CartController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(CartService $cartService)
     {
-        //
+        return inertia('Cart/Index', [
+            'cartItems' => $cartService->getCartItemsGrouped(),
+            'total_quantity' => $cartService->getTotalQuantity(),
+            'total_price' => $cartService->getTotalPrice(),
+        ]);
     }
 
     /**
@@ -59,5 +63,13 @@ class CartController extends Controller
     {
         $optionIds = $request->input('option_ids', null);
         $cartService->removeItemFromCart($product->id, $optionIds);
+    }
+
+    /**
+     * Handle checkout process.
+     */
+    public function checkout(Request $request, CartService $cartService)
+    {
+        // Checkout logic will be implemented here
     }
 }

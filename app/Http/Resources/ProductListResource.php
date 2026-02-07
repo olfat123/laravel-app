@@ -21,6 +21,7 @@ class ProductListResource extends JsonResource
             'slug' => $this->slug,
             'price' => $this->price,
             'quantity' => $this->quantity,
+            'has_variations' => ($this->variation_types_count ?? 0) > 0,
             'image_url' => $this->getFirstMediaUrl('images', 'small') ?: null,
             'user' => [
                 'id' => $this->user->id,

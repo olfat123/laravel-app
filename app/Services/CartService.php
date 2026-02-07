@@ -26,7 +26,6 @@ class CartService
         }
 
         $price = $product->getPriceForOptions($optionIds);
-
         if ( Auth::check() ) {
             $this->saveItemToDatabase($product->id, $quantity, $price, $optionIds);
         } else {
@@ -76,20 +75,24 @@ class CartService
                         if (!$product) continue;
 
                         $optionInfo = [];
+                        $optionIds = $cartItem['option_ids'] ?? [];
+                        if (!is_array($optionIds)) {
+                            $optionIds = [];
+                        }
                         $options = VariationTypeOption::with('variationType')
-                            ->whereIn('id', $cartItem['option_ids'] ?? [])
+                            ->whereIn('id', $optionIds)
                             ->get()
                             ->keyBy('id');
 
                         $imageUrl = null;
 
-                        foreach ( $cartItem['option_ids'] as $option_id ) {
+                        foreach ( $optionIds as $option_id ) {
                             $option = data_get($options, $option_id);
                             if(!$imageUrl){
                                 $imageUrl = $option?->getFirstMediaUrl('images', 'small') ?: null;
                             }
                             $optionInfo[] = [
-                                'id' => $option?->option_id,
+                                'id' => $option?->id,
                                 'name' => $option?->name,
                                 'type' => [
                                     'id' => $option?->variationType?->id,
@@ -104,7 +107,7 @@ class CartService
                             'slug'       => $product->slug,
                             'price'      => $cartItem['price'],
                             'quantity'   => $cartItem['quantity'],
-                            'option_ids' => $cartItem['option_ids'],
+                            'option_ids' => $optionIds,
                             'options'    => $optionInfo,
                             'image'  => $imageUrl ?: $product->getFirstMediaUrl('images', 'small'),
                             'user' => [
@@ -150,20 +153,31 @@ class CartService
     protected function updateItemQuantityInDatabase(int $productId, int $quantity, $optionIds = null): void
     {
         $userId = Auth::id();
-        $cartItem = CartItem::where( 'user_id', $userId )
-            ->where( 'product_id', $productId )
-            ->where( 'variation_type_option_ids', $optionIds ? json_encode( $optionIds ) : null )
-            ->first();
-        
-        if ( $cartItem ) {
-            $cartItem->update( [ 'quantity' => $quantity ] );
+
+        $query = CartItem::where('user_id', $userId)
+            ->where('product_id', $productId);
+
+        if ($optionIds) {
+            foreach ($optionIds as $typeId => $optionId) {
+                $query->where("variation_type_option_ids->$typeId", $optionId);
+            }
+        } else {
+            $query->whereNull('variation_type_option_ids');
+        }
+
+        $cartItem = $query->first();
+
+        if ($cartItem) {
+            $cartItem->update(['quantity' => $quantity]);
         }
     }
 
     protected function updateItemQuantityInCookies(int $productId, int $quantity, $optionIds = null): void
     {
         $cartItems = $this->getCartItemsFromCookies();
-        ksort($optionIds);
+        if ($optionIds) {
+            ksort($optionIds);
+        }
         $itemKey = $productId . '_' . ( $optionIds ? json_encode( $optionIds ) : 'no_options' );
         if ( isset( $cartItems[ $itemKey ] ) ) {
             $cartItems[ $itemKey ]['quantity'] = $quantity;
@@ -203,7 +217,9 @@ class CartService
     protected function saveItemToCookies(int $productId, int $quantity, $price, $optionIds = null): void
     {
         $cartItems = $this->getCartItemsFromCookies();
-        ksort($optionIds);
+        if ($optionIds) {
+            ksort($optionIds);
+        }
         $itemKey = $productId . '_' . ( $optionIds ? json_encode( $optionIds ) : 'no_options' );
 
         if ( isset( $cartItems[ $itemKey ] ) ) {
@@ -226,17 +242,25 @@ class CartService
     protected function removeItemFromDatabase(int $productId, $optionIds = null): void
     {
         $userId = Auth::id();
-        ksort($optionIds);
-        CartItem::where( 'user_id', $userId )
-            ->where( 'product_id', $productId )
-            ->where( 'variation_type_option_ids', $optionIds ? json_encode( $optionIds ) : null )
-            ->delete();
+        $query = CartItem::where('user_id', $userId)
+            ->where('product_id', $productId);
+
+        if ($optionIds) {
+            foreach ($optionIds as $typeId => $optionId) {
+                $query->where("variation_type_option_ids->$typeId", $optionId);
+            }
+        } else {
+            $query->whereNull('variation_type_option_ids');
+        }
+        $query->delete();
     }
 
     protected function removeItemFromCookies(int $productId, $optionIds = null): void
     {
         $cartItems = $this->getCartItemsFromCookies();
-        ksort($optionIds);
+        if ($optionIds) {
+            ksort($optionIds);
+        }
         $itemKey = $productId . '_' . ( $optionIds ? json_encode( $optionIds ) : 'no_options' );
         if ( isset( $cartItems[ $itemKey ] ) ) {
             unset( $cartItems[ $itemKey ] );
@@ -269,6 +293,20 @@ class CartService
     {
         $cartItems = json_decode( Cookie::get( self::COOKIE_NAME, '[]' ), true );
         return is_array( $cartItems ) ? $cartItems : [];
+    }
+
+    public function getCartItemsGrouped(): array
+    {
+        $cartItems = $this->getCartItems();
+        return collect($cartItems)
+            ->groupBy(fn($item) => $item['user']['id'])
+            ->map(fn($items, $userId) => [
+                'user' => $items[0]['user'],
+                'items' => $items->toArray(),
+                'total_quantity' => $items->sum('quantity'),
+                'total_price' => $items->sum(fn($item) => $item['price'] * $item['quantity']),
+            ])
+            ->toArray();
     }
 
 }
