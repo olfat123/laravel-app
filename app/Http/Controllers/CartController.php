@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Coupon;
 use App\Models\Product;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use App\Services\CartService;
 use App\Enums\OrderStatusEnum;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Container\Attributes\Log;
 
 class CartController extends Controller
 {
@@ -33,7 +34,7 @@ class CartController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Display the cart listing.
      */
     public function index(CartService $cartService)
     {
@@ -70,10 +71,13 @@ class CartController extends Controller
     public function update(Request $request, Product $product, CartService $cartService)
     {
         $request->validate([
-            'quantity' => [ 'integer', 'min:1'],
+            'quantity' => ['integer', 'min:1'],
         ]);
 
         $optionIds = $request->input('option_ids', null);
+        if ($optionIds) {
+            $optionIds = array_map('intval', $optionIds);
+        }
         $quantity = $request->input('quantity', 1);
         $cartService->updateItemQuantity($product->id, $quantity, $optionIds);
 
@@ -85,92 +89,162 @@ class CartController extends Controller
      */
     public function destroy(Request $request, Product $product, CartService $cartService)
     {
+        $cartItemId = $request->input('cart_item_id');
         $optionIds = $request->input('option_ids', null);
-        $cartService->removeItemFromCart($product->id, $optionIds);
+        if ($optionIds) {
+            $optionIds = array_map('intval', $optionIds);
+        }
+        $cartService->removeItemFromCart($product->id, $optionIds, $cartItemId);
+
+        return back()->with('success', 'Item removed from cart.');
     }
 
     /**
-     * Handle checkout process.
+     * Show the checkout page (shipping address + payment method selection).
      */
-    public function checkout(Request $request, CartService $cartService)
+    public function checkoutPage(Request $request, CartService $cartService)
     {
-        \Stripe\Stripe::setApiKey(config('app.stripe_secret_key'));
-
-        $vendorId = $request->input('vendor_id');
+        $vendorId = $request->query('vendor_id');
         $allCartItems = $cartService->getCartItemsGrouped();
+
+        $checkoutItems = $allCartItems;
+        if ($vendorId) {
+            $checkoutItems = isset($allCartItems[$vendorId]) ? [$vendorId => $allCartItems[$vendorId]] : [];
+        }
+
+        $totalPrice = collect($checkoutItems)->sum('total_price');
+
+        return inertia('Checkout/Index', [
+            'checkoutItems' => array_values($checkoutItems),
+            'total_price'   => $totalPrice,
+            'vendor_id'     => $vendorId,
+        ]);
+    }
+
+    /**
+     * Place orders — creates orders then handles payment method routing.
+     * payment_method: 'cod' (cash on delivery) or 'paymob_cc' (Paymob credit card)
+     */
+    public function placeOrder(Request $request, CartService $cartService)
+    {
+        $data = $request->validate([
+            'shipping_name'    => ['required', 'string', 'max:255'],
+            'shipping_phone'   => ['required', 'string', 'max:20'],
+            'shipping_address' => ['required', 'string', 'max:500'],
+            'shipping_city'    => ['required', 'string', 'max:100'],
+            'shipping_state'   => ['nullable', 'string', 'max:100'],
+            'shipping_country' => ['required', 'string', 'max:100'],
+            'shipping_zip'     => ['nullable', 'string', 'max:20'],
+            'payment_method'   => ['required', 'in:cod,paymob_cc'],
+            'vendor_id'        => ['nullable', 'integer'],
+            'coupon_code'      => ['nullable', 'string'],
+        ]);
+
+        $coupon = null;
+        if (!empty($data['coupon_code'])) {
+            $coupon = Coupon::where('code', strtoupper(trim($data['coupon_code'])))->first();
+            if (!$coupon) {
+                return back()->withErrors(['coupon_code' => 'Invalid coupon code.']);
+            }
+        }
+
+        $vendorId = $data['vendor_id'] ?? null;
+        $allCartItems = $cartService->getCartItemsGrouped();
+
+        $checkoutCartItems = $allCartItems;
+        if ($vendorId) {
+            $checkoutCartItems = isset($allCartItems[$vendorId]) ? [$vendorId => $allCartItems[$vendorId]] : [];
+        }
+
+        if (empty($checkoutCartItems)) {
+            return back()->with('error', 'Your cart is empty.');
+        }
+
         DB::beginTransaction();
         try {
-            $checkoutCartItems = $allCartItems;
-            if($vendorId) {
-                $checkoutCartItems = [$allCartItems[$vendorId] ?? []];
-            }
             $orders = [];
-            $lineItems = [];
+            $commissionRate = (float) Setting::get('website_commission', 0);
+
+            // Compute coupon discount across all checkout items
+            $checkoutTotal    = collect($checkoutCartItems)->sum('total_price');
+            $totalDiscount    = 0;
+            if ($coupon) {
+                $couponError = $coupon->validate((float) $checkoutTotal);
+                if ($couponError) {
+                    return back()->withErrors(['coupon_code' => $couponError]);
+                }
+                $totalDiscount = $coupon->calculateDiscount((float) $checkoutTotal);
+            }
+
             foreach ($checkoutCartItems as $item) {
                 $user = $item['user'];
                 $cartItems = $item['items'];
+
+                $totalPrice = $item['total_price'];
+
+                // Distribute discount proportionally across vendors
+                $vendorDiscount = $checkoutTotal > 0
+                    ? round($totalDiscount * ($totalPrice / $checkoutTotal), 4)
+                    : 0;
+                $discountedTotal   = max(0, $totalPrice - $vendorDiscount);
+                $websiteCommission = round($discountedTotal * $commissionRate / 100, 4);
+                $vendorSubtotal    = round($discountedTotal - $websiteCommission, 4);
+
                 $order = Order::create([
-                    'user_id' => auth()->id(),
-                    'vendor_user_id' => $user['id'],
-                    'total_price' => $item['total_price'],
-                    'stripe_session_id' => null,
-                    'status' => OrderStatusEnum::Pending->value,
+                    'user_id'            => auth()->id(),
+                    'vendor_user_id'     => $user['id'],
+                    'total_price'        => $discountedTotal,
+                    'discount_amount'    => $vendorDiscount,
+                    'coupon_code'        => $coupon ? $coupon->code : null,
+                    'website_commission' => $websiteCommission,
+                    'vendor_subtotal'    => $vendorSubtotal,
+                    'status'             => OrderStatusEnum::Pending->value,
+                    'payment_method'     => $data['payment_method'],
+                    'shipping_name'      => $data['shipping_name'],
+                    'shipping_phone'     => $data['shipping_phone'],
+                    'shipping_address'   => $data['shipping_address'],
+                    'shipping_city'      => $data['shipping_city'],
+                    'shipping_state'     => $data['shipping_state'] ?? null,
+                    'shipping_country'   => $data['shipping_country'],
+                    'shipping_zip'       => $data['shipping_zip'] ?? null,
                 ]);
+
                 $orders[] = $order;
+
                 foreach ($cartItems as $cartItem) {
                     $order->items()->create([
-                        'product_id' => $cartItem['product_id'],
-                        'quantity' => $cartItem['quantity'],
-                        'price' => $cartItem['price'],
+                        'product_id'                => $cartItem['product_id'],
+                        'quantity'                  => $cartItem['quantity'],
+                        'price'                     => $cartItem['price'],
                         'variation_type_option_ids' => $cartItem['option_ids'] ?? null,
                     ]);
-
-                    $description = collect($cartItem['options'] ?? [])->map(function ($item) {
-                        return "{$item['type']['name']}: {$item['name']}";
-                    })->implode(', ');
-
-                    $imageUrl = $this->sanitizeImageUrl($cartItem['image'] ?? null);
-                    $productData = [
-                        'name' => $cartItem['title'],
-                    ];
-                    if ($imageUrl) {
-                        $productData['images'] = [$imageUrl];
-                    }
-                    $lineItem = [
-                        'price_data' => [
-                            'currency' => 'usd',
-                            'product_data' => $productData,
-                            'unit_amount' => (int) ($cartItem['price'] * 100),
-                        ],
-                        'quantity' => $cartItem['quantity'],
-                    ];
-                    if (!empty($description)) {
-                        $lineItem['price_data']['product_data']['description'] = $description;
-                    }
-                    $lineItems[] = $lineItem;
-                    if (!empty($cartItem['option_ids'])) {
-                        $lineItem['price_data']['product_data']['metadata'] = [
-                            'variation_option_ids' => implode(',', $cartItem['option_ids']),
-                        ];
-                    }
                 }
             }
-            $session = \Stripe\Checkout\Session::create([
-                'payment_method_types' => ['card'],
-                'customer_email' => $request->user()->email,
-                'line_items' => $lineItems,
-                'mode' => 'payment',
-                'success_url' => route('stripe.success', []) . '?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => route('stripe.failure', []),
-            ]);
-            foreach ($orders as $order) {
-                $order->update(['stripe_session_id' => $session->id]);
+
+            // Increment coupon usage once all orders are created
+            if ($coupon) {
+                $coupon->incrementUsage();
             }
+
             DB::commit();
-            return redirect($session->url);
+
+            // Cash on delivery — clear cart and go to success
+            if ($data['payment_method'] === 'cod') {
+                $cartService->clearCart();
+                return inertia('Checkout/Success', [
+                    'message' => 'Order placed successfully! We will contact you to confirm delivery.',
+                ]);
+            }
+
+            // Paymob CC — store order IDs in session and redirect to Paymob
+            $orderIds = collect($orders)->pluck('id')->toArray();
+            session(['paymob_order_ids' => $orderIds]);
+
+            return redirect()->route('paymob.pay');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', $e->getMessage() ?: 'Something went wrong while processing your checkout. Please try again.');
+            return back()->with('error', $e->getMessage() ?: 'Something went wrong. Please try again.');
         }
     }
 }
+

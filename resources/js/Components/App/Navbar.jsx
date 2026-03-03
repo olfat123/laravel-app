@@ -19,9 +19,10 @@ export default function Navbar() {
         );
     }, [cartItems]);
   return (
-    <div className="navbar bg-base-100">
-        <div className="flex-1">
-            <Link href='/' className="btn btn-ghost text-xl">Store</Link>
+    <div className="navbar bg-base-100 shadow-sm">
+        <div className="flex-1 gap-2">
+            <Link href={route('home')} className="btn btn-ghost text-xl font-bold">Store</Link>
+            <Link href={route('shop')} className="btn btn-ghost btn-sm hidden sm:inline-flex">Shop</Link>
         </div>
         <div className="flex flex-none gap-4">
             <div className="dropdown dropdown-end">
@@ -90,6 +91,12 @@ export default function Navbar() {
                         <li>
                             <Link href={route('profile.edit')} className="justify-between">
                                 Profile
+                            </Link>
+                        </li>
+                        <li>
+                            <Link href={route('account.index')} className="justify-between">
+                                My Account
+                                <span className="badge badge-sm badge-primary">Orders</span>
                             </Link>
                         </li>
                         <li>

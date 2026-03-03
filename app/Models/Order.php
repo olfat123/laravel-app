@@ -9,14 +9,26 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Order extends Model
 {
     protected $fillable = [
-        'stripe_session_id',
         'user_id',
+        'vendor_user_id',
         'total_price',
         'status',
+        'notes',
         'online_payment_commission',
         'website_commission',
         'vendor_subtotal',
-        'payment_intent'
+        'payment_method',
+        'payment_intent',
+        'paymob_order_id',
+        'coupon_code',
+        'discount_amount',
+        'shipping_name',
+        'shipping_phone',
+        'shipping_address',
+        'shipping_city',
+        'shipping_state',
+        'shipping_country',
+        'shipping_zip',
     ];
 
     public function items(): HasMany
@@ -31,6 +43,6 @@ class Order extends Model
 
     public function vendor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'vendor_user_id', 'user_id');
+        return $this->belongsTo(User::class, 'vendor_user_id');
     }
 }

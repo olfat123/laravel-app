@@ -6,7 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import { CreditCardIcon } from '@heroicons/react/24/outline';
 import CartItem from '@/Components/App/CartItem';
 
-export default function Index({ csrf_token, cartItems, total_price, total_quantity }) {
+export default function Index({ cartItems, total_price, total_quantity }) {
     const [updating, setUpdating] = useState(null);
 
     // Convert cartItems to array if it's an object, ensure it's always an array
@@ -22,7 +22,7 @@ export default function Index({ csrf_token, cartItems, total_price, total_quanti
     }
 
     return (
-        <AuthenticatedLayout csrf_token={csrf_token} >
+        <AuthenticatedLayout>
             <Head title="Shopping Cart" />
 
             <div className="container mx-auto p-8 flex flex-col gap-8 lg:flex-row gap-4">
@@ -40,14 +40,13 @@ export default function Index({ csrf_token, cartItems, total_price, total_quanti
                                             {cartItem.user.name}'s Store
                                         </Link>
                                         <div>
-                                            <form action={route('cart.checkout')} method="POST">
-                                                <input type="hidden" name="_token" value={csrf_token} />
-                                                <input type="hidden" name="vendor_id" value={cartItem.user.id} />
-                                                <button className="btn btn-sm btn-ghost">
-                                                    <CreditCardIcon className="size-6"/>
-                                                    Pay Only for this seller
-                                                </button>
-                                            </form>
+                                            <Link
+                                                href={route('cart.checkout') + '?vendor_id=' + cartItem.user.id}
+                                                className="btn btn-sm btn-ghost"
+                                            >
+                                                <CreditCardIcon className="size-6"/>
+                                                Checkout this seller
+                                            </Link>
                                         </div>
                                     </div>
                                     {(cartItem.items || []).map((item) => (
@@ -70,13 +69,12 @@ export default function Index({ csrf_token, cartItems, total_price, total_quanti
                     <div className="card-body">
                         Subtotal ({total_quantity} items): 
                         <CurrencyFormatter amount={total_price}/>
-                        <form action={route('cart.checkout')} method="POST">
-                            <input type="hidden" name="_token" value={csrf_token} />
-                            <PrimaryButton className="rounded-full" >   
+                        <Link href={route('cart.checkout')}>
+                            <PrimaryButton className="rounded-full w-full justify-center">
                                 <CreditCardIcon className="size-6"/>
                                 Proceed to Checkout
                             </PrimaryButton>
-                        </form>
+                        </Link>
                     </div>
                 </div>
             </div>

@@ -51,4 +51,24 @@ class User extends Authenticatable
     {
         return $this->hasOne(Vendor::class, 'user_id', 'id');
     }
+
+    public function orders()
+    {
+        return $this->hasMany(\App\Models\Order::class, 'user_id');
+    }
+
+    public function vendorOrders()
+    {
+        return $this->hasMany(\App\Models\Order::class, 'vendor_user_id');
+    }
+
+    public function wishlistItems()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(UserAddress::class)->orderByDesc('is_default');
+    }
 }

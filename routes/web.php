@@ -2,44 +2,56 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\StripeController;
+use App\Http\Controllers\PaymobController;
+use App\Http\Controllers\CouponController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AccountController;
 
-Route::get('/', [ProductController::class, 'home'])->name('dashboard');
+Route::get('/', [ProductController::class, 'home'])->name('home');
+Route::get('/shop', [ProductController::class, 'shop'])->name('shop');
 Route::get('/product/{product:slug}', [ProductController::class, 'show'])
     ->name('product.show');
-
-Route::post('/cart/store/{product}', function () {
-    // Cart storing logic will be here
-})->name('cart.store');
 
 Route::controller(CartController::class)->prefix('cart')->name('cart.')->group(function () {
     Route::get('/', 'index')->name('index');
     Route::post('/add/{product}', 'store')->name('store');
-    Route::get('/{id}/edit', 'edit')->name('edit');
     Route::put('/{product}', 'update')->name('update');
     Route::delete('/{product}', 'destroy')->name('destroy');
-    Route::post('/checkout', 'checkout')->name('checkout');
 });
 
-Route::post('/stripe/webhook', [StripeController::class, 'webhook'])->name('stripe.webhook');
+// Auth-protected routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Coupon
+    Route::post('/coupon/apply', [CouponController::class, 'apply'])->name('coupon.apply');
 
-// Auth routes
-Route::middleware('auth')->group(function () {
+    // Checkout page and order placement
+    Route::get('/checkout', [CartController::class, 'checkoutPage'])->name('cart.checkout');
+    Route::post('/checkout/place-order', [CartController::class, 'placeOrder'])->name('cart.place-order');
+
+    // Paymob — redirect to Paymob hosted iframe
+    Route::get('/paymob/pay', [PaymobController::class, 'pay'])->name('paymob.pay');
+    // Paymob — redirect back after hosted payment
+    Route::get('/paymob/response', [PaymobController::class, 'response'])->name('paymob.response');
+
+    // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::middleware(['verified'])->group(function () {
-        Route::get('/cart/checkout', [CartController::class, 'checkout'])
-            ->name('cart.checkout');
 
-        Route::get('/stripe/success', [StripeController::class, 'success'])
-            ->name('stripe.success');
-
-        Route::get('/stripe/failure', [StripeController::class, 'failure'])
-            ->name('stripe.failure');
-    });
+    // Account (orders, wishlist, addresses)
+    Route::get('/account', [AccountController::class, 'index'])->name('account.index');
+    Route::post('/account/wishlist/{product}', [AccountController::class, 'toggleWishlist'])->name('account.wishlist.toggle');
+    Route::post('/account/addresses', [AccountController::class, 'storeAddress'])->name('account.addresses.store');
+    Route::put('/account/addresses/{address}', [AccountController::class, 'updateAddress'])->name('account.addresses.update');
+    Route::delete('/account/addresses/{address}', [AccountController::class, 'deleteAddress'])->name('account.addresses.delete');
+    Route::post('/account/addresses/{address}/default', [AccountController::class, 'setDefaultAddress'])->name('account.addresses.default');
+    Route::post('/account/orders/{order}/reorder', [AccountController::class, 'reorder'])->name('account.orders.reorder');
+    Route::post('/account/orders/{order}/cancel', [AccountController::class, 'cancelOrder'])->name('account.orders.cancel');
 });
 
+// Paymob webhook — excluded from CSRF (configured in bootstrap/app.php)
+Route::post('/paymob/callback', [PaymobController::class, 'callback'])->name('paymob.callback');
+
 require __DIR__.'/auth.php';
+

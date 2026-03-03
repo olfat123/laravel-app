@@ -6,6 +6,7 @@ use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 use Illuminate\Http\Request;
 use App\Services\CartService;
+use App\Models\Wishlist;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -51,6 +52,9 @@ class HandleInertiaRequests extends Middleware
             'totalQuantity' => $totalQuantity,
             'totalPrice' => $totalPrice,
             'cartItems' => $cartItems,
+            'wishlistedProductIds' => fn () => $request->user()
+                ? Wishlist::where('user_id', $request->user()->id)->pluck('product_id')->toArray()
+                : [],
         ];
     }
 }

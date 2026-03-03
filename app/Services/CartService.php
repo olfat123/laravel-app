@@ -31,6 +31,7 @@ class CartService
         } else {
             $this->saveItemToCookies($product->id, $quantity, $price, $optionIds);
         }
+        $this->cachedCartItems = null;
     }
 
     public function updateItemQuantity(int $productId, int $quantity, $optionIds = null)
@@ -40,15 +41,17 @@ class CartService
         } else {
             $this->updateItemQuantityInCookies($productId, $quantity, $optionIds);
         }
+        $this->cachedCartItems = null;
     }
 
-    public function removeItemFromCart(int $productId, $optionIds = null)
+    public function removeItemFromCart(int $productId, $optionIds = null, ?int $cartItemId = null)
     {
         if ( Auth::check() ) {
-            $this->removeItemFromDatabase($productId, $optionIds);
+            $this->removeItemFromDatabase($productId, $optionIds, $cartItemId);
         } else {
             $this->removeItemFromCookies($productId, $optionIds);
         }
+        $this->cachedCartItems = null;
     }
 
     public function getCartItems(): array
@@ -154,13 +157,17 @@ class CartService
     {
         $userId = Auth::id();
 
+        if ($optionIds) {
+            // Cast to int so json_encode produces {"1":1} matching what saveItemToDatabase stored
+            $optionIds = array_map('intval', $optionIds);
+            ksort($optionIds);
+        }
+
         $query = CartItem::where('user_id', $userId)
             ->where('product_id', $productId);
 
         if ($optionIds) {
-            foreach ($optionIds as $typeId => $optionId) {
-                $query->where("variation_type_option_ids->$typeId", $optionId);
-            }
+            $query->where('variation_type_option_ids', json_encode($optionIds));
         } else {
             $query->whereNull('variation_type_option_ids');
         }
@@ -239,9 +246,18 @@ class CartService
         Cookie::queue( self::COOKIE_NAME, json_encode( $cartItems ), self::COOKIE_LIFETIME );
     }
 
-    protected function removeItemFromDatabase(int $productId, $optionIds = null): void
+    protected function removeItemFromDatabase(int $productId, $optionIds = null, ?int $cartItemId = null): void
     {
         $userId = Auth::id();
+
+        // If we have the direct DB id, use it for a reliable exact delete
+        if ($cartItemId) {
+            CartItem::where('id', $cartItemId)
+                ->where('user_id', $userId)
+                ->delete();
+            return;
+        }
+
         $query = CartItem::where('user_id', $userId)
             ->where('product_id', $productId);
 
@@ -336,6 +352,19 @@ class CartService
         }
         // Clear the cookie after moving items to database
         Cookie::queue( Cookie::forget( self::COOKIE_NAME ) );
+    }
+
+    /**
+     * Clear all items from the cart (after successful order placement).
+     */
+    public function clearCart(): void
+    {
+        if (Auth::check()) {
+            CartItem::where('user_id', Auth::id())->delete();
+        } else {
+            Cookie::queue(Cookie::forget(self::COOKIE_NAME));
+        }
+        $this->cachedCartItems = null;
     }
 
 }

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Enums\RolesEnum;
+use App\Enums\VendorStatusEnum;
 use App\Services\CartService;
 
 class AuthenticatedSessionController extends Controller
@@ -35,12 +36,21 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
         $user = Auth::user();
+        $cartService->moveCartItemsToDatabase($user->id);
+
         if ($user->hasAnyRole([RolesEnum::Admin, RolesEnum::Vendor])) {
-            $cartService->moveCartItemsToDatabase($user->id);
+            // Only send approved vendors (and admins) to the admin panel
+            if ($user->hasRole(RolesEnum::Vendor)) {
+                $vendor = $user->vendor;
+                if (! $vendor || $vendor->status !== VendorStatusEnum::APPROVED->value) {
+                    return redirect()->route('home')
+                        ->with('error', 'Your vendor account is pending approval. You will be notified once approved.');
+                }
+            }
             return Inertia::location(route('filament.admin.pages.dashboard', absolute: false));
         }
-        $cartService->moveCartItemsToDatabase($user->id);
-        return redirect()->intended(route('dashboard', absolute: false));
+
+        return redirect()->intended(route('home', absolute: false));
     }
 
     /**
