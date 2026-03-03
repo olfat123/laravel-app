@@ -309,4 +309,33 @@ class CartService
             ->toArray();
     }
 
+    public function moveCartItemsToDatabase($userId): void
+    {
+        $cartItems = $this->getCartItemsFromCookies();
+        foreach ( $cartItems as $itemKey => $cartItem ) {
+            
+            $existingItem = CartItem::where('user_id', $userId)
+                ->where('product_id', $cartItem['product_id'])
+                ->where('variation_type_option_ids', $cartItem['option_ids'] ? json_encode($cartItem['option_ids']) : null)
+                ->first();
+            if ( $existingItem ) {
+                $existingItem->update([
+                    'quantity' => $existingItem->quantity + $cartItem['quantity'],
+                    'price' => $cartItem['price'], // Update price in case it has changed
+                ]);
+            } else {
+                CartItem::create([
+                    'user_id' => $userId,
+                    'product_id' => $cartItem['product_id'],
+                    'variation_type_option_ids' => $cartItem['option_ids'] ? json_encode($cartItem['option_ids']) : null,
+                    'quantity' => $cartItem['quantity'],
+                    'price' => $cartItem['price'],
+                ]);
+            }
+
+        }
+        // Clear the cookie after moving items to database
+        Cookie::queue( Cookie::forget( self::COOKIE_NAME ) );
+    }
+
 }

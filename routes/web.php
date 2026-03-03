@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\StripeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 
@@ -22,13 +23,22 @@ Route::controller(CartController::class)->prefix('cart')->name('cart.')->group(f
     Route::post('/checkout', 'checkout')->name('checkout');
 });
 
+Route::post('/stripe/webhook', [StripeController::class, 'webhook'])->name('stripe.webhook');
+
 // Auth routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::middleware(['verified'])->group(function () {
-        Route::get('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+        Route::get('/cart/checkout', [CartController::class, 'checkout'])
+            ->name('cart.checkout');
+
+        Route::get('/stripe/success', [StripeController::class, 'success'])
+            ->name('stripe.success');
+
+        Route::get('/stripe/failure', [StripeController::class, 'failure'])
+            ->name('stripe.failure');
     });
 });
 

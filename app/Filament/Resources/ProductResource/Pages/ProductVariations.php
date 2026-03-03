@@ -100,8 +100,8 @@ class ProductVariations extends EditRecord
                 ? json_decode($variation['variation_type_option_ids'], true)
                 : $variation['variation_type_option_ids'];
 
-            foreach ($types as $idx => $type) {
-                $optionId = $optionIds[$idx] ?? null;
+            foreach ($types as $id => $type) {
+                $optionId = $optionIds[$id] ?? null;
                 $option = $type->options->firstWhere('id', $optionId);
                 $item['variation_type_' . $type->id] = [
                     'id' => $optionId,
