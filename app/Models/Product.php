@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProductStatusEnum;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
@@ -71,6 +72,41 @@ class Product extends Model implements HasMedia
     {
         return $query->active();
     }
+
+    /**
+     * Whether the sale price is currently active.
+     */
+    public function isOnSale(): bool
+    {
+        if ($this->sale_price === null) {
+            return false;
+        }
+
+        $now = Carbon::now();
+
+        if ($this->sale_start && $now->lt($this->sale_start)) {
+            return false;
+        }
+
+        if ($this->sale_end && $now->gt($this->sale_end)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns the effective price (sale price if active, otherwise regular price).
+     */
+    public function getActivePriceAttribute(): float
+    {
+        return $this->isOnSale() ? (float) $this->sale_price : (float) $this->price;
+    }
+
+    protected $casts = [
+        'sale_start' => 'datetime',
+        'sale_end'   => 'datetime',
+    ];
 
     public function getPriceForOptions(array $optionIds)
     {

@@ -45,7 +45,7 @@ export default function ProductItem({ product }) {
                 </svg>
             </button>
 
-            <Link href={route('product.show', product.slug)}>
+            <Link href={route('product.show', product.slug)} className="relative block">
                 <figure>
                     <img
                         src={product.image_url}
@@ -53,11 +53,21 @@ export default function ProductItem({ product }) {
                         className="aspect-square object-cover"
                     />
                 </figure>
+                {product.is_on_sale && (
+                    <span className="absolute top-3 left-3 badge badge-error text-white font-semibold">SALE</span>
+                )}
             </Link>
             <div className="card-body">
                 <h2 className="card-title">{product.title}</h2>
                 <p>
-                    by <Link href="/" className="hover:underline">{product.user.name}</Link>
+                    by{' '}
+                    {product.user.store_slug ? (
+                        <Link href={route('store.show', product.user.store_slug)} className="hover:underline">
+                            {product.user.name}
+                        </Link>
+                    ) : (
+                        <span>{product.user.name}</span>
+                    )}
                 </p>
                 <p>
                     in <Link href="/" className="hover:underline">{product.department.name}</Link>
@@ -76,7 +86,18 @@ export default function ProductItem({ product }) {
                             Add to Cart
                         </button>
                     )}
-                    <CurrencyFormatter amount={product.price} currency="USD" />
+                    {product.is_on_sale ? (
+                        <div className="flex items-center gap-2">
+                            <span className="text-error font-semibold">
+                                <CurrencyFormatter amount={product.sale_price} currency="USD" />
+                            </span>
+                            <span className="text-sm line-through text-gray-400">
+                                <CurrencyFormatter amount={product.price} currency="USD" />
+                            </span>
+                        </div>
+                    ) : (
+                        <CurrencyFormatter amount={product.price} currency="USD" />
+                    )}
                 </div>
             </div>
         </div>

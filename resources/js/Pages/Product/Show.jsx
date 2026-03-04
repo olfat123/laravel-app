@@ -46,12 +46,16 @@ export default function Show({ product, variationOptions }) {
             if(arrayAreEquals(selectedOptionIds, optionIds)) {
                 return {
                     price: variation.price,
+                    sale_price: variation.sale_price,
+                    is_on_sale: variation.is_on_sale,
                     quantity: variation.quantity === null ? 1 : variation.quantity,
                 }
             }
         }
         return {
             price: product.price,
+            sale_price: product.sale_price,
+            is_on_sale: product.is_on_sale,
             quantity: product.quantity === null ? 1 : product.quantity,
         };
     }, [product, selectedOptions]);
@@ -157,15 +161,17 @@ export default function Show({ product, variationOptions }) {
     const renderAddToCartButton = () => {
         return (
             <div className="mb-8 flex gap-4">
-                <select value={form.data.quantity} 
-                    onChange={onQuantityChange} 
-                    className="select select-bordered w-full">
-                    {Array.from({ 
-                        length: Math.min(10, computedProduct.quantity) 
-                    }).map((_, i) => (
-                        <option key={i} value={i + 1}>Quantity: {i + 1}</option>
-                    ))}
-                </select>
+                <input
+                    type="number"
+                    min="1"
+                    max={computedProduct.quantity}
+                    value={form.data.quantity}
+                    onChange={onQuantityChange}
+                    className="w-20 p-2 border rounded"
+                />
+                {computedProduct.quantity < 1 && (
+                    <p className="text-red-500 mt-2">This product is out of stock.</p>
+                )}
                 <button 
                     onClick={addToCart} 
                     disabled={computedProduct.quantity < 1}
@@ -195,9 +201,21 @@ export default function Show({ product, variationOptions }) {
                     <div className="col-span-5">
                         <h1 className="text-2xl mb-8">{product.title}</h1>
                         <div>
-                            <div className="text-3xl font-semibold">
-                                <CurrencyFormatter amount={computedProduct.price} />
-                            </div>
+                            {computedProduct.is_on_sale ? (
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="text-3xl font-semibold text-error">
+                                        <CurrencyFormatter amount={computedProduct.sale_price} />
+                                    </div>
+                                    <div className="text-xl line-through text-gray-400">
+                                        <CurrencyFormatter amount={computedProduct.price} />
+                                    </div>
+                                    <span className="badge badge-error text-white">SALE</span>
+                                </div>
+                            ) : (
+                                <div className="text-3xl font-semibold">
+                                    <CurrencyFormatter amount={computedProduct.price} />
+                                </div>
+                            )}
                         </div>
 
                         {renderProductVariationTypes()}
@@ -210,18 +228,7 @@ export default function Show({ product, variationOptions }) {
                         }
                         
                         <div className="mb-4">
-                            <label className="block mb-2 font-semibold">Quantity:</label>
-                            <input
-                                type="number"
-                                min="1"
-                                max={computedProduct.quantity}
-                                value={form.data.quantity}
-                                onChange={onQuantityChange}
-                                className="w-20 p-2 border rounded"
-                            />
-                            {computedProduct.quantity < 1 && (
-                                <p className="text-red-500 mt-2">This product is out of stock.</p>
-                            )}
+                            
                         </div>
                         {renderAddToCartButton()}
 

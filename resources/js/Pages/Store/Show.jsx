@@ -3,15 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import ProductItem from '@/Components/App/ProductItem';
 import ProductFilterPanel from '@/Components/App/ProductFilterPanel';
-import { AdjustmentsHorizontalIcon, XMarkIcon } from '@heroicons/react/24/outline';
-
-const SORT_OPTIONS = [
-    { value: 'newest',     label: 'Newest' },
-    { value: 'price_asc',  label: 'Price: Low → High' },
-    { value: 'price_desc', label: 'Price: High → Low' },
-    { value: 'name_asc',   label: 'Name: A → Z' },
-    { value: 'name_desc',  label: 'Name: Z → A' },
-];
+import { AdjustmentsHorizontalIcon, MapPinIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 function useDebounce(value, delay = 400) {
     const [debounced, setDebounced] = useState(value);
@@ -22,15 +14,20 @@ function useDebounce(value, delay = 400) {
     return debounced;
 }
 
-export default function Shop({ products, departments = [], stores = [], filters }) {
-    // PHP serializes an empty array as `[]` in JSON, not `{}`, so guard against
-    // filters being a JS array or null/undefined before reading its properties.
+const SORT_OPTIONS = [
+    { value: 'newest',     label: 'Newest' },
+    { value: 'price_asc',  label: 'Price: Low → High' },
+    { value: 'price_desc', label: 'Price: High → Low' },
+    { value: 'name_asc',   label: 'Name: A → Z' },
+    { value: 'name_desc',  label: 'Name: Z → A' },
+];
+
+export default function StoreShow({ vendor, products, departments = [], filters }) {
     const f = (filters && !Array.isArray(filters)) ? filters : {};
 
     const [search, setSearch]             = useState(f.search        ?? '');
     const [departmentId, setDepartmentId] = useState(f.department_id ?? '');
     const [categoryId, setCategoryId]     = useState(f.category_id   ?? '');
-    const [storeId, setStoreId]           = useState(f.store_id       ?? '');
     const [minPrice, setMinPrice]         = useState(f.min_price      ?? '');
     const [maxPrice, setMaxPrice]         = useState(f.max_price      ?? '');
     const [sort, setSort]                 = useState(f.sort           ?? 'newest');
@@ -42,7 +39,6 @@ export default function Shop({ products, departments = [], stores = [], filters 
 
     const isFirstRender = useRef(true);
 
-    // Derive categories from the selected department
     const categories = departmentId
         ? (departments.find(d => String(d.id) === String(departmentId))?.categories ?? [])
         : departments.flatMap(d => d.categories);
@@ -51,63 +47,92 @@ export default function Shop({ products, departments = [], stores = [], filters 
         search:        debouncedSearch   || undefined,
         department_id: departmentId      || undefined,
         category_id:   categoryId        || undefined,
-        store_id:      storeId           || undefined,
         min_price:     debouncedMinPrice || undefined,
         max_price:     debouncedMaxPrice || undefined,
         sort:          sort !== 'newest' ? sort : undefined,
-    }), [debouncedSearch, departmentId, categoryId, storeId, debouncedMinPrice, debouncedMaxPrice, sort]);
+    }), [debouncedSearch, departmentId, categoryId, debouncedMinPrice, debouncedMaxPrice, sort]);
 
     useEffect(() => {
         if (isFirstRender.current) { isFirstRender.current = false; return; }
-        router.get(route('shop'), buildParams(), { preserveState: true, replace: true });
-    }, [debouncedSearch, departmentId, categoryId, storeId, debouncedMinPrice, debouncedMaxPrice, sort]);
+        router.get(route('store.show', vendor.store_slug), buildParams(), { preserveState: true, replace: true });
+    }, [debouncedSearch, departmentId, categoryId, debouncedMinPrice, debouncedMaxPrice, sort]);
 
     const handleDepartmentChange = (val) => {
         setDepartmentId(val);
-        setCategoryId(''); // reset category when department changes
+        setCategoryId('');
     };
 
     const activeFilterCount = [
-        search, departmentId, categoryId, storeId, minPrice, maxPrice, sort !== 'newest' ? sort : '',
+        search, departmentId, categoryId, minPrice, maxPrice, sort !== 'newest' ? sort : '',
     ].filter(Boolean).length;
 
     const clearAll = () => {
         setSearch(''); setDepartmentId(''); setCategoryId('');
-        setStoreId(''); setMinPrice(''); setMaxPrice(''); setSort('newest');
+        setMinPrice(''); setMaxPrice(''); setSort('newest');
     };
 
-    /** Shared props forwarded to the filter panel */
     const filterPanelProps = {
         search,        onSearchChange:     setSearch,
         departmentId,  onDepartmentChange: handleDepartmentChange,
         categoryId,    onCategoryChange:   setCategoryId,
-        storeId,       onStoreChange:      setStoreId,
         minPrice,      onMinPriceChange:   setMinPrice,
         maxPrice,      onMaxPriceChange:   setMaxPrice,
         departments,
         categories,
-        stores,
+        stores: [],
         activeFilterCount,
         onClearAll: clearAll,
     };
 
     return (
         <AuthenticatedLayout>
-            <Head title="Shop" />
+            <Head title={vendor.store_name} />
 
-            {/* Page header */}
-            <div className="bg-base-200 border-b border-base-300">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div>
-                        <h1 className="text-3xl font-bold text-base-content">Shop</h1>
-                        <p className="mt-1 text-base-content/60">
-                            {products.meta?.total
-                                ? `${products.meta.total} product${products.meta.total !== 1 ? 's' : ''} found`
-                                : 'Browse all products'}
-                        </p>
+            {/* ── Banner ── */}
+            <div className="relative w-full bg-base-200 overflow-hidden" style={{ minHeight: '200px' }}>
+                {vendor.banner_url ? (
+                    <img
+                        src={vendor.banner_url}
+                        alt={`${vendor.store_name} banner`}
+                        className="w-full object-cover"
+                        style={{ maxHeight: '400px' }}
+                    />
+                ) : (
+                    <div className="w-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20"
+                         style={{ height: '220px' }}>
+                        <span className="text-5xl font-extrabold text-base-content/20 select-none uppercase tracking-widest">
+                            {vendor.store_name}
+                        </span>
                     </div>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-6 pb-5 pt-10">
+                    <h1 className="text-3xl font-bold text-white drop-shadow">{vendor.store_name}</h1>
+                    {vendor.store_address && (
+                        <p className="flex items-center gap-1 text-white/80 text-sm mt-1">
+                            <MapPinIcon className="size-4 flex-shrink-0" />
+                            {vendor.store_address}
+                        </p>
+                    )}
+                </div>
+            </div>
 
-                    {/* Sort + mobile filter toggle */}
+            {/* ── Store description ── */}
+            {vendor.store_description && (
+                <div className="bg-base-100 border-b border-base-300">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                        <p className="text-base-content/70 text-sm leading-relaxed">{vendor.store_description}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Toolbar ── */}
+            <div className="bg-base-200 border-b border-base-300">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p className="text-base-content/60 text-sm">
+                        {products.meta?.total
+                            ? `${products.meta.total} product${products.meta.total !== 1 ? 's' : ''} found`
+                            : 'Browse products'}
+                    </p>
                     <div className="flex items-center gap-3">
                         <select
                             className="select select-bordered select-sm"
@@ -118,7 +143,6 @@ export default function Shop({ products, departments = [], stores = [], filters 
                                 <option key={o.value} value={o.value}>{o.label}</option>
                             ))}
                         </select>
-
                         <button
                             className="btn btn-outline btn-sm lg:hidden flex items-center gap-1"
                             onClick={() => setSidebarOpen(true)}
@@ -133,7 +157,7 @@ export default function Shop({ products, departments = [], stores = [], filters 
                 </div>
             </div>
 
-            {/* Mobile filter drawer */}
+            {/* ── Mobile filter drawer ── */}
             {sidebarOpen && (
                 <div className="fixed inset-0 z-50 flex lg:hidden">
                     <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
@@ -149,6 +173,7 @@ export default function Shop({ products, departments = [], stores = [], filters 
                 </div>
             )}
 
+            {/* ── Main layout ── */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex gap-8">
 
                 {/* Desktop sidebar */}
@@ -204,4 +229,3 @@ export default function Shop({ products, departments = [], stores = [], filters 
         </AuthenticatedLayout>
     );
 }
-

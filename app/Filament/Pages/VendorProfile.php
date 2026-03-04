@@ -14,6 +14,8 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 
 class VendorProfile extends Page implements HasForms
 {
@@ -43,6 +45,7 @@ class VendorProfile extends Page implements HasForms
 
         $this->form->fill([
             'store_name'          => $vendor->store_name,
+            'store_description'   => $vendor->store_description,
             'store_address'       => $vendor->store_address,
             'bank_name'           => $vendor->bank_name,
             'bank_account_name'   => $vendor->bank_account_name,
@@ -56,6 +59,7 @@ class VendorProfile extends Page implements HasForms
     {
         return $form
             ->statePath('data')
+            ->model(Vendor::firstOrNew(['user_id' => Auth::id()]))
             ->schema([
                 Forms\Components\Section::make('Store Details')
                     ->description('Public information shown to customers.')
@@ -68,6 +72,23 @@ class VendorProfile extends Page implements HasForms
                         Forms\Components\TextInput::make('store_address')
                             ->label('Store Address')
                             ->maxLength(500)
+                            ->columnSpanFull(),
+                        Forms\Components\Textarea::make('store_description')
+                            ->label('Store Description')
+                            ->rows(3)
+                            ->maxLength(1000)
+                            ->columnSpanFull(),
+                    ]),
+
+                Forms\Components\Section::make('Store Banner')
+                    ->description('This banner appears at the top of your store page (recommended: 1200×400 px).')
+                    ->schema([
+                        SpatieMediaLibraryFileUpload::make('banner')
+                            ->label('Banner Image')
+                            ->collection('banner')
+                            ->image()
+                            ->imagePreviewHeight('160')
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                             ->columnSpanFull(),
                     ]),
 
@@ -101,13 +122,31 @@ class VendorProfile extends Page implements HasForms
 
         $existing = Vendor::where('user_id', Auth::id())->first();
 
-        Vendor::updateOrCreate(
+        // Generate slug from store_name
+        $slug = Str::slug($data['store_name']);
+        $base = $slug;
+        $i    = 1;
+        while (
+            Vendor::where('store_slug', $slug)
+                ->where('user_id', '!=', Auth::id())
+                ->exists()
+        ) {
+            $slug = $base . '-' . $i++;
+        }
+
+        $vendor = Vendor::updateOrCreate(
             ['user_id' => Auth::id()],
-            array_merge($data, [
-                // Only set to pending on first creation; preserve existing status otherwise
-                'status' => $existing?->status ?? VendorStatusEnum::PENDING->value,
-            ])
+            array_merge(
+                collect($data)->except('banner')->toArray(),
+                [
+                    'store_slug' => $slug,
+                    'status'     => $existing?->status ?? VendorStatusEnum::PENDING->value,
+                ]
+            )
         );
+
+        // Persist media via Filament's media library form component
+        $this->form->model($vendor)->saveRelationships();
 
         Notification::make()
             ->title('Profile saved successfully!')

@@ -12,6 +12,7 @@ use App\Enums\ProductVariationTypeEnum;
 use Filament\Forms\Components\Repeater;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Resources\Pages\EditRecord;
 use App\Filament\Resources\ProductResource;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -59,6 +60,19 @@ class ProductVariations extends EditRecord
                             ->label(__('Price'))
                             ->numeric()
                             ->default(0),
+                        TextInput::make('sale_price')
+                            ->label(__('Sale Price'))
+                            ->numeric()
+                            ->nullable()
+                            ->placeholder('Leave empty for no sale'),
+                        DateTimePicker::make('sale_start')
+                            ->label(__('Sale Start'))
+                            ->nullable()
+                            ->native(false),
+                        DateTimePicker::make('sale_end')
+                            ->label(__('Sale End'))
+                            ->nullable()
+                            ->native(false),
                     ])
                 
             ]); 
@@ -94,6 +108,9 @@ class ProductVariations extends EditRecord
                 'id' => $variation['id'] ?? null,
                 'quantity' => $variation['quantity'] ?? 1,
                 'price' => $variation['price'] ?? 0,
+                'sale_price' => $variation['sale_price'] ?? null,
+                'sale_start' => isset($variation['sale_start']) ? $variation['sale_start'] : null,
+                'sale_end'   => isset($variation['sale_end']) ? $variation['sale_end'] : null,
             ];
 
             $optionIds = is_string($variation['variation_type_option_ids'])
@@ -137,6 +154,9 @@ class ProductVariations extends EditRecord
                 $product['id'] = $existingEntry['id'];
                 $product['quantity'] = $existingEntry['quantity'];
                 $product['price'] = $existingEntry['price'];
+                $product['sale_price'] = $existingEntry['sale_price'] ?? null;
+                $product['sale_start'] = $existingEntry['sale_start'] ?? null;
+                $product['sale_end']   = $existingEntry['sale_end'] ?? null;
             } else {
                 $product['id'] = null;
                 $product['quantity'] = $defaultQuantity;
@@ -202,6 +222,9 @@ class ProductVariations extends EditRecord
                 'variation_type_option_ids' => json_encode($optionIds),
                 'quantity' => $quantity,
                 'price' => $price,
+                'sale_price' => $option['sale_price'] ?? null,
+                'sale_start' => $option['sale_start'] ?? null,
+                'sale_end'   => $option['sale_end'] ?? null,
             ];
         }
         $data['variations'] = $formattedVariations;
@@ -213,7 +236,7 @@ class ProductVariations extends EditRecord
         $variation = $data['variations'];
         unset($data['variations']);
         $record->variations()->delete();
-        $record->variations()->upsert($variation, ['id'], ['variation_type_option_ids', 'quantity', 'price']);
+        $record->variations()->upsert($variation, ['id'], ['variation_type_option_ids', 'quantity', 'price', 'sale_price', 'sale_start', 'sale_end']);
         return $record;
     }
 }

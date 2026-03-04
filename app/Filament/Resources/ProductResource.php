@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Resources\Pages\Page;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Section;
 use Filament\Pages\SubNavigationPosition;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
@@ -109,7 +111,27 @@ class ProductResource extends Resource
                 Select::make('status')
                     ->options(ProductStatusEnum::labels())
                     ->default(ProductStatusEnum::DRAFT->value)
-                    ->required()
+                    ->required(),
+                Section::make('Sale Price')
+                    ->description('Set a sale price and optionally restrict it to a date range.')
+                    ->collapsible()
+                    ->schema([
+                        TextInput::make('sale_price')
+                            ->label('Sale Price')
+                            ->numeric()
+                            ->nullable()
+                            ->minValue(0),
+                        DateTimePicker::make('sale_start')
+                            ->label('Sale Start')
+                            ->nullable()
+                            ->native(false),
+                        DateTimePicker::make('sale_end')
+                            ->label('Sale End')
+                            ->nullable()
+                            ->native(false)
+                            ->after('sale_start'),
+                    ])
+                    ->columns(3)
         
             ]);
     }

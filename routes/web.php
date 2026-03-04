@@ -7,9 +7,11 @@ use App\Http\Controllers\CouponController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\StoreController;
 
 Route::get('/', [ProductController::class, 'home'])->name('home');
 Route::get('/shop', [ProductController::class, 'shop'])->name('shop');
+Route::get('/store/{vendor:store_slug}', [StoreController::class, 'show'])->name('store.show');
 Route::get('/product/{product:slug}', [ProductController::class, 'show'])
     ->name('product.show');
 
