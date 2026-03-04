@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\CartItem;
+use App\Models\Setting;
 use App\Models\VariationType;
 use App\Models\VariationTypeOption;
 use Illuminate\Support\Facades\Auth;
@@ -153,12 +154,65 @@ class CartService
         return $totalPrice;
     }
 
+    /**
+     * Return tax settings: rate (%) and whether prices already include tax.
+     */
+    public function getTaxSettings(): array
+    {
+        return [
+            'tax_rate'           => (float) Setting::get('tax_rate', 0),
+            'prices_include_tax' => Setting::get('prices_include_tax', '0') === '1',
+        ];
+    }
+
+    /**
+     * Compute the tax amount for a given subtotal using the configured tax settings.
+     *
+     * - prices_include_tax = true  → tax is extracted from the subtotal
+     *   tax_amount = subtotal − subtotal / (1 + rate/100)
+     *
+     * - prices_include_tax = false → tax is added on top of the subtotal
+     *   tax_amount = subtotal × rate / 100
+     */
+    public function calculateTaxAmount(float $subtotal): float
+    {
+        $settings = $this->getTaxSettings();
+        $rate     = $settings['tax_rate'];
+
+        if ($rate <= 0) {
+            return 0.0;
+        }
+
+        if ($settings['prices_include_tax']) {
+            // Extract tax from inclusive price
+            return round($subtotal - $subtotal / (1 + $rate / 100), 4);
+        }
+
+        // Add tax on top of exclusive price
+        return round($subtotal * $rate / 100, 4);
+    }
+
+    /**
+     * Grand total: subtotal + tax (or same as subtotal when tax-inclusive).
+     */
+    public function getGrandTotal(): float
+    {
+        $subtotal = $this->getTotalPrice();
+        $settings = $this->getTaxSettings();
+
+        if ($settings['prices_include_tax']) {
+            // Tax is already baked in — grand total equals subtotal
+            return $subtotal;
+        }
+
+        return round($subtotal + $this->calculateTaxAmount($subtotal), 4);
+    }
+
     protected function updateItemQuantityInDatabase(int $productId, int $quantity, $optionIds = null): void
     {
         $userId = Auth::id();
 
         if ($optionIds) {
-            // Cast to int so json_encode produces {"1":1} matching what saveItemToDatabase stored
             $optionIds = array_map('intval', $optionIds);
             ksort($optionIds);
         }

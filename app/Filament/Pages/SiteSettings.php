@@ -32,7 +32,9 @@ class SiteSettings extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'website_commission' => (float) Setting::get('website_commission', 0),
+            'website_commission'  => (float) Setting::get('website_commission', 0),
+            'tax_rate'            => (float) Setting::get('tax_rate', 0),
+            'prices_include_tax'  => (bool) (Setting::get('prices_include_tax', '0') === '1'),
         ]);
     }
 
@@ -53,6 +55,25 @@ class SiteSettings extends Page implements HasForms
                             ->required()
                             ->helperText('e.g. 10 means 10% will be deducted from total_price. The remaining 90% is the vendor_subtotal.'),
                     ]),
+
+                Forms\Components\Section::make('Tax Settings')
+                    ->description('Configure the tax rate applied to orders. Choose whether product prices already include tax or not.')
+                    ->schema([
+                        Forms\Components\TextInput::make('tax_rate')
+                            ->label('Tax Rate (%)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->step(0.01)
+                            ->suffix('%')
+                            ->default(0)
+                            ->required()
+                            ->helperText('e.g. 14 means 14% VAT. Set to 0 to disable tax.'),
+
+                        Forms\Components\Toggle::make('prices_include_tax')
+                            ->label('Prices include tax')
+                            ->helperText('Enable if your product prices already include tax (tax-inclusive). Disable if tax should be added on top of the price (tax-exclusive).'),
+                    ]),
             ])
             ->statePath('data');
     }
@@ -62,6 +83,8 @@ class SiteSettings extends Page implements HasForms
         $data = $this->form->getState();
 
         Setting::set('website_commission', $data['website_commission']);
+        Setting::set('tax_rate',            $data['tax_rate']);
+        Setting::set('prices_include_tax',  $data['prices_include_tax'] ? '1' : '0');
 
         Notification::make()
             ->title('Settings saved.')

@@ -22,6 +22,8 @@ class Order extends Model
         'paymob_order_id',
         'coupon_code',
         'discount_amount',
+        'tax_rate',
+        'tax_amount',
         'shipping_name',
         'shipping_phone',
         'shipping_address',

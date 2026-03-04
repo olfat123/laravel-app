@@ -9,7 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import { CreditCardIcon, TruckIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 
-export default function Index({ checkoutItems, total_price, vendor_id }) {
+export default function Index({ checkoutItems, total_price, vendor_id, tax_rate, tax_amount, prices_include_tax, grand_total }) {
     const { data, setData, post, processing, errors } = useForm({
         shipping_name: '',
         shipping_phone: '',
@@ -28,7 +28,16 @@ export default function Index({ checkoutItems, total_price, vendor_id }) {
     const [couponError, setCouponError]     = useState('');
     const [couponLoading, setCouponLoading] = useState(false);
 
-    const appliedTotal = couponData ? couponData.final_total : total_price;
+    const appliedTotal = couponData ? couponData.final_total : grand_total; // kept for potential external use
+
+    // When a coupon is applied and tax is exclusive, recompute tax on the discounted base
+    const discountedBase = couponData ? couponData.final_total : total_price;
+    const effectiveTaxAmount = (tax_rate > 0 && !prices_include_tax)
+        ? parseFloat((discountedBase * tax_rate / 100).toFixed(4))
+        : (couponData ? 0 : tax_amount);
+    const effectiveGrandTotal = prices_include_tax
+        ? discountedBase
+        : discountedBase + effectiveTaxAmount;
 
     const applyCoupon = async () => {
         if (!couponCode.trim()) return;
@@ -254,6 +263,18 @@ export default function Index({ checkoutItems, total_price, vendor_id }) {
 
                                 <div className="divider my-2"></div>
 
+                                {/* Tax line — only when no coupon (coupon section has its own tax row) */}
+                                {tax_rate > 0 && !couponData && (
+                                    <div className="flex justify-between text-sm text-base-content/70 mb-2">
+                                        <span>Tax ({tax_rate}%{prices_include_tax ? ' incl.' : ''})</span>
+                                        <span>
+                                            {prices_include_tax
+                                                ? 'Included'
+                                                : <CurrencyFormatter amount={tax_amount} />}
+                                        </span>
+                                    </div>
+                                )}
+
                                 {/* Coupon Code */}
                                 {!couponData ? (
                                     <div className="mb-3">
@@ -299,12 +320,22 @@ export default function Index({ checkoutItems, total_price, vendor_id }) {
                                             <span>Discount ({couponData.code})</span>
                                             <span>- <CurrencyFormatter amount={couponData.discount_amount} /></span>
                                         </div>
+                                        {tax_rate > 0 && (
+                                            <div className="flex justify-between text-sm text-base-content/70 mb-1">
+                                                <span>Tax ({tax_rate}%{prices_include_tax ? ' incl.' : ''})</span>
+                                                <span>
+                                                    {prices_include_tax
+                                                        ? 'Included'
+                                                        : <CurrencyFormatter amount={effectiveTaxAmount} />}
+                                                </span>
+                                            </div>
+                                        )}
                                     </>
                                 )}
 
                                 <div className="flex justify-between font-bold text-base">
                                     <span>Total</span>
-                                    <CurrencyFormatter amount={appliedTotal} />
+                                    <CurrencyFormatter amount={effectiveGrandTotal} />
                                 </div>
 
                                 <PrimaryButton

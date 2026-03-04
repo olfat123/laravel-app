@@ -38,10 +38,18 @@ class CartController extends Controller
      */
     public function index(CartService $cartService)
     {
+        $subtotal   = $cartService->getTotalPrice();
+        $taxSettings = $cartService->getTaxSettings();
+        $taxAmount  = $cartService->calculateTaxAmount($subtotal);
+
         return inertia('Cart/Index', [
-            'cartItems' => $cartService->getCartItemsGrouped(),
-            'total_quantity' => $cartService->getTotalQuantity(),
-            'total_price' => $cartService->getTotalPrice(),
+            'cartItems'          => $cartService->getCartItemsGrouped(),
+            'total_quantity'     => $cartService->getTotalQuantity(),
+            'total_price'        => $subtotal,
+            'tax_rate'           => $taxSettings['tax_rate'],
+            'tax_amount'         => $taxAmount,
+            'prices_include_tax' => $taxSettings['prices_include_tax'],
+            'grand_total'        => $cartService->getGrandTotal(),
         ]);
     }
 
@@ -114,10 +122,20 @@ class CartController extends Controller
 
         $totalPrice = collect($checkoutItems)->sum('total_price');
 
+        $taxSettings = $cartService->getTaxSettings();
+        $taxAmount   = $cartService->calculateTaxAmount((float) $totalPrice);
+        $grandTotal  = $taxSettings['prices_include_tax']
+            ? $totalPrice
+            : round($totalPrice + $taxAmount, 4);
+
         return inertia('Checkout/Index', [
-            'checkoutItems' => array_values($checkoutItems),
-            'total_price'   => $totalPrice,
-            'vendor_id'     => $vendorId,
+            'checkoutItems'      => array_values($checkoutItems),
+            'total_price'        => $totalPrice,
+            'tax_rate'           => $taxSettings['tax_rate'],
+            'tax_amount'         => $taxAmount,
+            'prices_include_tax' => $taxSettings['prices_include_tax'],
+            'grand_total'        => $grandTotal,
+            'vendor_id'          => $vendorId,
         ]);
     }
 
@@ -163,7 +181,9 @@ class CartController extends Controller
         DB::beginTransaction();
         try {
             $orders = [];
-            $commissionRate = (float) Setting::get('website_commission', 0);
+            $commissionRate  = (float) Setting::get('website_commission', 0);
+            $taxRate         = (float) Setting::get('tax_rate', 0);
+            $pricesIncludeTax = Setting::get('prices_include_tax', '0') === '1';
 
             // Compute coupon discount across all checkout items
             $checkoutTotal    = collect($checkoutCartItems)->sum('total_price');
@@ -187,6 +207,21 @@ class CartController extends Controller
                     ? round($totalDiscount * ($totalPrice / $checkoutTotal), 4)
                     : 0;
                 $discountedTotal   = max(0, $totalPrice - $vendorDiscount);
+
+                // Calculate tax
+                if ($taxRate > 0) {
+                    if ($pricesIncludeTax) {
+                        // Extract tax from inclusive price
+                        $taxAmount = round($discountedTotal - $discountedTotal / (1 + $taxRate / 100), 4);
+                    } else {
+                        // Add tax on top
+                        $taxAmount = round($discountedTotal * $taxRate / 100, 4);
+                        $discountedTotal = round($discountedTotal + $taxAmount, 4);
+                    }
+                } else {
+                    $taxAmount = 0;
+                }
+
                 $websiteCommission = round($discountedTotal * $commissionRate / 100, 4);
                 $vendorSubtotal    = round($discountedTotal - $websiteCommission, 4);
 
@@ -195,6 +230,8 @@ class CartController extends Controller
                     'vendor_user_id'     => $user['id'],
                     'total_price'        => $discountedTotal,
                     'discount_amount'    => $vendorDiscount,
+                    'tax_rate'           => $taxRate,
+                    'tax_amount'         => $taxAmount,
                     'coupon_code'        => $coupon ? $coupon->code : null,
                     'website_commission' => $websiteCommission,
                     'vendor_subtotal'    => $vendorSubtotal,
