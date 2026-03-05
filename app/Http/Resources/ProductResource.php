@@ -18,6 +18,7 @@ class ProductResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'title_ar' => $this->title_ar,
             'slug' => $this->slug,
             'price' => $this->price,
             'sale_price' => $this->sale_price,
@@ -27,6 +28,7 @@ class ProductResource extends JsonResource
             'is_on_sale' => $this->isOnSale(),
             'quantity' => $this->quantity,
             'description' => $this->description,
+            'description_ar' => $this->description_ar,
             'image' => $this->getFirstMediaUrl('images', 'small') ?: null,
             'images' => $this->getMedia('images')->map(function ($media) {
                 return [

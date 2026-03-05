@@ -9,6 +9,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import CurrencyFormatter from '@/Components/CurrencyFormatter';
 import Carousel from '@/Components/Carousel';
 import { Head } from '@inertiajs/react';
+import { useTrans, useLocale } from '@/i18n';
 
 export default function Show({ product, variationOptions }) {
     const form = useForm({
@@ -17,6 +18,10 @@ export default function Show({ product, variationOptions }) {
         quantity: 1,
         price: product.price | null
     });
+    const t = useTrans();
+    const locale = useLocale();
+    const productTitle = (locale === 'ar' && product.title_ar) ? product.title_ar : product.title;
+    const productDesc = (locale === 'ar' && product.description_ar) ? product.description_ar : product.description;
 
     const {url} = usePage();
 
@@ -170,12 +175,12 @@ export default function Show({ product, variationOptions }) {
                     className="w-20 p-2 border rounded"
                 />
                 {computedProduct.quantity < 1 && (
-                    <p className="text-red-500 mt-2">This product is out of stock.</p>
+                    <p className="text-red-500 mt-2">{t('product.out_of_stock')}</p>
                 )}
                 <button 
                     onClick={addToCart} 
                     disabled={computedProduct.quantity < 1}
-                    className="btn btn-primary">Add to Cart</button>
+                    className="btn btn-primary">{t('product.add_to_cart')}</button>
                 
             </div>
         );
@@ -191,7 +196,7 @@ export default function Show({ product, variationOptions }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={product.title} />
+            <Head title={productTitle} />
 
             <div className="container mx-auto py-8">
                 <div className="grid gap-8 grid-cols-1 lg:grid-cols-12">
@@ -199,7 +204,7 @@ export default function Show({ product, variationOptions }) {
                         <Carousel images={images} />
                     </div>
                     <div className="col-span-5">
-                        <h1 className="text-2xl mb-8">{product.title}</h1>
+                        <h1 className="text-2xl mb-8">{productTitle}</h1>
                         <div>
                             {computedProduct.is_on_sale ? (
                                 <div className="flex items-center gap-3 mb-4">
@@ -209,7 +214,7 @@ export default function Show({ product, variationOptions }) {
                                     <div className="text-xl line-through text-gray-400">
                                         <CurrencyFormatter amount={computedProduct.price} />
                                     </div>
-                                    <span className="badge badge-error text-white">SALE</span>
+                                    <span className="badge badge-error text-white">{t('product_item.sale_badge')}</span>
                                 </div>
                             ) : (
                                 <div className="text-3xl font-semibold">
@@ -223,7 +228,7 @@ export default function Show({ product, variationOptions }) {
                         {computedProduct.quantity != undefined &&
                         computedProduct.quantity < 10 &&
                             <div className="text-error my-4">
-                                <span>Only {computedProduct.quantity} left in stock!</span>
+                                <span>{t('product.only_left', { count: computedProduct.quantity })}</span>
                             </div>
                         }
                         
@@ -232,8 +237,8 @@ export default function Show({ product, variationOptions }) {
                         </div>
                         {renderAddToCartButton()}
 
-                        <b className="text-xl">About the item</b>
-                        <div className="wysiwyg-output" dangerouslySetInnerHTML={{ __html: product.description }}></div>
+                        <b className="text-xl">{t('product.about')}</b>
+                        <div className="wysiwyg-output" dangerouslySetInnerHTML={{ __html: productDesc }}></div>
                     </div>
                 </div>
             </div>

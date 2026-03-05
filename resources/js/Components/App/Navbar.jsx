@@ -3,10 +3,13 @@ import { Link } from '@inertiajs/react'
 import { usePage } from '@inertiajs/react'
 import CurrencyFormatter from '@/Components/CurrencyFormatter';
 import { productRoute } from '@/Helper';
+import { useTrans, useLocale } from '@/i18n';
 
 export default function Navbar() {
     const { auth, totalQuantity, totalPrice, cartItems } = usePage().props;
     const user = auth.user;
+    const t = useTrans();
+    const locale = useLocale();
     
     // Flatten cartItems if it's grouped by vendor
     const flatCartItems = React.useMemo(() => {
@@ -21,8 +24,8 @@ export default function Navbar() {
   return (
     <div className="navbar bg-base-100 shadow-sm">
         <div className="flex-1 gap-2">
-            <Link href={route('home')} className="btn btn-ghost text-xl font-bold">Store</Link>
-            <Link href={route('shop')} className="btn btn-ghost btn-sm hidden sm:inline-flex">Shop</Link>
+            <Link href={route('home')} className="btn btn-ghost text-xl font-bold">{t('nav.brand')}</Link>
+            <Link href={route('shop')} className="btn btn-ghost btn-sm hidden sm:inline-flex">{t('nav.shop')}</Link>
         </div>
         <div className="flex flex-none gap-4">
             <div className="dropdown dropdown-end">
@@ -36,12 +39,12 @@ export default function Navbar() {
                     tabIndex={0}
                     className="card card-compact dropdown-content bg-base-100 z-1 mt-3 w-[300px] shadow">
                     <div className="card-body">
-                        <span className="text-lg font-bold">{totalQuantity} Items</span>
-                        <span className="text-info">Subtotal: <CurrencyFormatter amount={totalPrice} /></span>
+                        <span className="text-lg font-bold">{t('nav.cart.items', { count: totalQuantity })}</span>
+                        <span className="text-info">{t('nav.cart.subtotal')} <CurrencyFormatter amount={totalPrice} /></span>
 
                         <div className={'my-4 max-h-[300px] overflow-auto'}>
                             {flatCartItems.length === 0 && (
-                                <div className={'py-2 text-gray-500 text-center'}>Your cart is empty.</div>
+                                <div className={'py-2 text-gray-500 text-center'}>{t('nav.cart.empty')}</div>
                             )}
                             {flatCartItems.map((item) => (
                                 <div key={item.id} className="flex gap-4 p-3">
@@ -60,7 +63,7 @@ export default function Navbar() {
                                             </Link>
                                         </h3>
                                         <div className="flex justify-between text-sm">
-                                            <div>Qty: {item.quantity}</div>
+                                            <div>{t('nav.cart.qty')} {item.quantity}</div>
                                             <div>
                                                 <CurrencyFormatter amount={item.price} />
                                             </div>
@@ -71,7 +74,7 @@ export default function Navbar() {
                         </div>
 
                         <div className="card-actions">
-                            <Link href={route('cart.index')} className="btn btn-primary btn-block">View cart</Link>
+                            <Link href={route('cart.index')} className="btn btn-primary btn-block">{t('nav.cart.view')}</Link>
                         </div>
                     </div>
                 </div>
@@ -90,26 +93,33 @@ export default function Navbar() {
                         className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">
                         <li>
                             <Link href={route('profile.edit')} className="justify-between">
-                                Profile
+                                {t('nav.profile')}
                             </Link>
                         </li>
                         <li>
                             <Link href={route('account.index')} className="justify-between">
-                                My Account
-                                <span className="badge badge-sm badge-primary">Orders</span>
+                                {t('nav.my_account')}
+                                <span className="badge badge-sm badge-primary">{t('nav.orders_badge')}</span>
                             </Link>
                         </li>
                         <li>
-                            <Link href={route('logout')} method="post" as="button">Logout</Link>
+                            <Link href={route('logout')} method="post" as="button">{t('nav.logout')}</Link>
                         </li>
                     </ul>
                 </div>
             )}
             {!user && (<>
-                <Link href={route('login')} className="btn">Login</Link>
-                <Link href={route('register')} className='btn btn-primary'>Register</Link>
+                <Link href={route('login')} className="btn">{t('nav.login')}</Link>
+                <Link href={route('register')} className='btn btn-primary'>{t('nav.register')}</Link>
                 </>
             )}
+            {/* Language switcher */}
+            <Link
+                href={route('language.switch', locale === 'ar' ? 'en' : 'ar')}
+                className="btn btn-ghost btn-sm"
+            >
+                {locale === 'ar' ? t('lang.switch_to_en') : t('lang.switch_to_ar')}
+            </Link>
         </div>
     </div>
   )

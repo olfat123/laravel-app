@@ -5,9 +5,11 @@ import CurrencyFormatter from '@/Components/CurrencyFormatter';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { CreditCardIcon } from '@heroicons/react/24/outline';
 import CartItem from '@/Components/App/CartItem';
+import { useTrans } from '@/i18n';
 
 export default function Index({ cartItems, total_price, total_quantity, tax_rate, tax_amount, prices_include_tax, grand_total }) {
     const [updating, setUpdating] = useState(null);
+    const t = useTrans();
 
     // Convert cartItems to array if it's an object, ensure it's always an array
     let cartItemsArray = [];
@@ -23,15 +25,15 @@ export default function Index({ cartItems, total_price, total_quantity, tax_rate
 
     return (
         <AuthenticatedLayout>
-            <Head title="Shopping Cart" />
+            <Head title={t('cart.page_title')} />
 
             <div className="container mx-auto p-8 flex flex-col gap-8 lg:flex-row gap-4">
                 <div className="card w-full bg-white dark:bg-gray-800 order-2 lg:order-1">
                     <div className="card-body">
-                        <h2 className="text-lg font-bold">Shopping Cart</h2>
+                        <h2 className="text-lg font-bold">{t('cart.heading')}</h2>
                         <div className='my-4'>
                             {cartItemsArray.length === 0 && (
-                                <p>Your cart is empty.</p>
+                                <p>{t('cart.empty')}</p>
                             )}
                             {cartItemsArray.map((cartItem) => (
                                 <div key={cartItem.user.id}>
@@ -45,7 +47,7 @@ export default function Index({ cartItems, total_price, total_quantity, tax_rate
                                                 className="btn btn-sm btn-ghost"
                                             >
                                                 <CreditCardIcon className="size-6"/>
-                                                Checkout this seller
+                                                {t('cart.checkout_seller')}
                                             </Link>
                                         </div>
                                     </div>
@@ -68,30 +70,30 @@ export default function Index({ cartItems, total_price, total_quantity, tax_rate
                 <div className="card flex-1 bg-white dark:bg-gray-800 lg:min-w-[260px] order-1 lg:order-2">
                     <div className="card-body">
                         <div className="flex justify-between text-sm mb-1">
-                            <span>Subtotal ({total_quantity} items)</span>
+                            <span>{t('cart.subtotal', { count: total_quantity })}</span>
                             <CurrencyFormatter amount={total_price}/>
                         </div>
 
                         {tax_rate > 0 && (
                             <div className="flex justify-between text-sm text-base-content/70 mb-1">
                                 <span>
-                                    Tax ({tax_rate}%{prices_include_tax ? ' incl.' : ''})
+                                    {t('cart.tax', { rate: tax_rate })}{prices_include_tax ? ' ' + t('cart.tax_incl') : ''}
                                 </span>
-                                <span>{prices_include_tax ? 'Included' : <CurrencyFormatter amount={tax_amount} />}</span>
+                                <span>{prices_include_tax ? t('cart.included') : <CurrencyFormatter amount={tax_amount} />}</span>
                             </div>
                         )}
 
                         <div className="divider my-1"></div>
 
                         <div className="flex justify-between font-bold text-base mb-3">
-                            <span>Total</span>
+                            <span>{t('cart.total')}</span>
                             <CurrencyFormatter amount={grand_total}/>
                         </div>
 
                         <Link href={route('cart.checkout')}>
                             <PrimaryButton className="rounded-full w-full justify-center">
                                 <CreditCardIcon className="size-6"/>
-                                Proceed to Checkout
+                                {t('cart.proceed_checkout')}
                             </PrimaryButton>
                         </Link>
                     </div>

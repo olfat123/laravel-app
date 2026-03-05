@@ -3,17 +3,19 @@ import { Head } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
+import { useTrans } from '@/i18n';
 
 export default function Edit({ mustVerifyEmail, status }) {
+    const t = useTrans();
     return (
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Profile
+                    {t('profile.heading')}
                 </h2>
             }
         >
-            <Head title="Profile" />
+            <Head title={t('profile.page_title')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">

@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import ProductItem from '@/Components/App/ProductItem';
+import { useTrans } from '@/i18n';
 
 const DEPT_COLORS = [
     'from-violet-500 to-purple-600',
@@ -14,6 +15,7 @@ const DEPT_COLORS = [
 ];
 
 export default function Home({ departments, featuredProducts }) {
+    const t = useTrans();
     return (
         <AuthenticatedLayout>
             <Head title="Welcome" />
@@ -26,23 +28,23 @@ export default function Home({ departments, featuredProducts }) {
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-28 md:py-40 text-center">
                     <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary text-xs font-semibold uppercase tracking-widest mb-6">
-                        New arrivals every week
+                        {t('home.hero.badge')}
                     </span>
                     <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-white leading-tight">
-                        Shop Smarter,<br />
+                        {t('home.hero.headline')}<br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                            Live Better
+                            {t('home.hero.headline2')}
                         </span>
                     </h1>
                     <p className="mt-6 text-lg md:text-xl text-slate-400 max-w-2xl mx-auto">
-                        Discover thousands of products from trusted vendors — all in one place.
+                        {t('home.hero.subtext')}
                     </p>
                     <div className="mt-10 flex flex-wrap justify-center gap-4">
                         <Link href={route('shop')} className="btn btn-primary btn-lg px-10 shadow-lg shadow-primary/30">
-                            Shop Now
+                            {t('home.hero.cta_shop')}
                         </Link>
                         <a href="#departments" className="btn btn-outline btn-lg px-10 text-white border-white/30 hover:bg-white/10 hover:border-white/50">
-                            Browse Categories
+                            {t('home.hero.cta_browse')}
                         </a>
                     </div>
                 </div>
@@ -53,8 +55,8 @@ export default function Home({ departments, featuredProducts }) {
                 <section id="departments" className="py-20 bg-base-100">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="text-center mb-12">
-                            <h2 className="text-3xl md:text-4xl font-bold text-base-content">Shop by Category</h2>
-                            <p className="mt-3 text-base-content/60">Find exactly what you're looking for</p>
+                            <h2 className="text-3xl md:text-4xl font-bold text-base-content">{t('home.departments.heading')}</h2>
+                            <p className="mt-3 text-base-content/60">{t('home.departments.subtext')}</p>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                             {departments.map((dept, i) => (
@@ -67,7 +69,7 @@ export default function Home({ departments, featuredProducts }) {
                                     <div className="relative z-10">
                                         <p className="text-white font-bold text-lg leading-tight">{dept.name}</p>
                                         {dept.categories_count > 0 && (
-                                            <p className="text-white/70 text-xs mt-1">{dept.categories_count} categories</p>
+                                            <p className="text-white/70 text-xs mt-1">{dept.categories_count} {t('home.departments.categories')}</p>
                                         )}
                                     </div>
                                     <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -88,11 +90,11 @@ export default function Home({ departments, featuredProducts }) {
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-end justify-between mb-12">
                             <div>
-                                <h2 className="text-3xl md:text-4xl font-bold text-base-content">Featured Products</h2>
-                                <p className="mt-3 text-base-content/60">Handpicked just for you</p>
+                                <h2 className="text-3xl md:text-4xl font-bold text-base-content">{t('home.featured.heading')}</h2>
+                                <p className="mt-3 text-base-content/60">{t('home.featured.subtext')}</p>
                             </div>
                             <Link href={route('shop')} className="btn btn-ghost gap-1 hidden sm:flex">
-                                View all
+                                {t('home.featured.view_all')}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
@@ -104,7 +106,7 @@ export default function Home({ departments, featuredProducts }) {
                             ))}
                         </div>
                         <div className="mt-10 text-center sm:hidden">
-                            <Link href={route('shop')} className="btn btn-outline btn-wide">View all products</Link>
+                            <Link href={route('shop')} className="btn btn-outline btn-wide">{t('home.featured.view_all_mobile')}</Link>
                         </div>
                     </div>
                 </section>
@@ -113,16 +115,16 @@ export default function Home({ departments, featuredProducts }) {
             {/* ── Vendor CTA ──────────────────────────────────────── */}
             <section className="py-20 bg-gradient-to-r from-primary to-secondary">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 className="text-3xl md:text-4xl font-extrabold text-white">Ready to start selling?</h2>
+                    <h2 className="text-3xl md:text-4xl font-extrabold text-white">{t('home.cta.heading')}</h2>
                     <p className="mt-4 text-white/80 text-lg max-w-xl mx-auto">
-                        Join thousands of vendors and reach customers across the country.
+                        {t('home.cta.subtext')}
                     </p>
                     <div className="mt-8 flex flex-wrap justify-center gap-4">
                         <Link href={route('register')} className="btn btn-lg bg-white text-primary hover:bg-white/90 border-none shadow-lg px-10">
-                            Get Started
+                            {t('home.cta.get_started')}
                         </Link>
                         <Link href={route('shop')} className="btn btn-lg btn-outline text-white border-white/50 hover:bg-white/10 hover:border-white px-10">
-                            Browse Store
+                            {t('home.cta.browse')}
                         </Link>
                     </div>
                 </div>

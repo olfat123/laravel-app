@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import CurrencyFormatter from '@/Components/CurrencyFormatter';
 import ProductItem from '@/Components/App/ProductItem';
 import { useState } from 'react';
+import { useTrans, useLocale } from '@/i18n';
 
 const STATUS_COLORS = {
     pending:    'badge-warning',
@@ -21,14 +22,17 @@ const CANCELLABLE_STATUSES = ['pending', 'processing'];
 // ─── Orders Tab ──────────────────────────────────────────────────────────────
 function OrdersTab({ orders }) {
     const [expanded, setExpanded] = useState(null);
+    const t = useTrans();
+    const locale = useLocale();
+    const itemTitle = (item) => (locale === 'ar' && item.product?.title_ar) ? item.product.title_ar : item.product?.title;
 
     if (!orders.length) {
         return (
             <div className="text-center py-16">
                 <div className="text-6xl mb-4">📦</div>
-                <h3 className="text-xl font-semibold mb-2">No orders yet</h3>
-                <p className="text-base-content/60 mb-6">Start shopping to see your orders here.</p>
-                <Link href={route('shop')} className="btn btn-primary">Browse Shop</Link>
+                <h3 className="text-xl font-semibold mb-2">{t('account.orders.empty_title')}</h3>
+                <p className="text-base-content/60 mb-6">{t('account.orders.empty_sub')}</p>
+                <Link href={route('shop')} className="btn btn-primary">{t('account.browse_shop')}</Link>
             </div>
         );
     }
@@ -44,7 +48,7 @@ function OrdersTab({ orders }) {
                     >
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                <span className="font-bold text-base-content/50 text-sm">Order</span>
+                                <span className="font-bold text-base-content/50 text-sm">{t('account.orders.order_label')}</span>
                                 <span className="font-bold">#{order.id}</span>
                                 <span className={`badge badge-sm ${STATUS_COLORS[order.status] ?? 'badge-ghost'}`}>
                                     {order.status}
@@ -70,7 +74,7 @@ function OrdersTab({ orders }) {
                                     {item.product?.image_url ? (
                                         <img
                                             src={item.product.image_url}
-                                            alt={item.product?.title}
+                                            alt={itemTitle(item)}
                                             className="w-12 h-12 rounded-lg object-cover border border-base-300"
                                         />
                                     ) : (
@@ -94,24 +98,24 @@ function OrdersTab({ orders }) {
                         <div className="border-t border-base-300 px-6 py-4 space-y-4">
                             {/* Items list */}
                             <div>
-                                <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-base-content/60">Items</h4>
+                                <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-base-content/60">{t('account.orders.items_heading')}</h4>
                                 <div className="space-y-3">
                                     {order.items.map((item) => (
                                         <div key={item.id} className="flex items-center gap-3">
                                             {item.product?.image_url ? (
-                                                <img src={item.product.image_url} alt={item.product.title} className="w-14 h-14 rounded-lg object-cover" />
+                                                <img src={item.product.image_url} alt={itemTitle(item)} className="w-14 h-14 rounded-lg object-cover" />
                                             ) : (
                                                 <div className="w-14 h-14 rounded-lg bg-base-200" />
                                             )}
                                             <div className="flex-1 min-w-0">
                                                 {item.product ? (
                                                     <Link href={route('product.show', item.product.slug)} className="font-medium hover:underline truncate block">
-                                                        {item.product.title}
+                                                        {itemTitle(item)}
                                                     </Link>
                                                 ) : (
-                                                    <span className="font-medium text-base-content/50">Product removed</span>
+                                                    <span className="font-medium text-base-content/50">{t('account.orders.product_removed')}</span>
                                                 )}
-                                                <span className="text-sm text-base-content/60">Qty: {item.quantity}</span>
+                                                <span className="text-sm text-base-content/60">{t('account.orders.qty')} {item.quantity}</span>
                                             </div>
                                             <CurrencyFormatter amount={item.price * item.quantity} currency="EGP" locale="en-EG" />
                                         </div>
@@ -122,7 +126,7 @@ function OrdersTab({ orders }) {
                             {/* Shipping info */}
                             {order.shipping_address && (
                                 <div>
-                                    <h4 className="font-semibold mb-1 text-sm uppercase tracking-wide text-base-content/60">Shipped to</h4>
+                                    <h4 className="font-semibold mb-1 text-sm uppercase tracking-wide text-base-content/60">{t('account.orders.shipped_to')}</h4>
                                     <p className="text-sm">
                                         {order.shipping_name} — {order.shipping_address}, {order.shipping_city}, {order.shipping_country}
                                     </p>
@@ -132,10 +136,10 @@ function OrdersTab({ orders }) {
                             {/* Payment */}
                             <div className="flex items-center justify-between pt-2 border-t border-base-300">
                                 <span className="text-sm text-base-content/60 capitalize">
-                                    Payment: {order.payment_method ?? 'N/A'}
+                                    {t('account.orders.payment')}: {order.payment_method ?? 'N/A'}
                                 </span>
                                 <div className="flex items-center gap-2 font-semibold">
-                                    <span>Total:</span>
+                                    <span>{t('account.orders.total')}:</span>
                                     <CurrencyFormatter amount={order.total_price} currency="EGP" locale="en-EG" />
                                 </div>
                             </div>
@@ -156,7 +160,7 @@ function OrdersTab({ orders }) {
                                     <button
                                         className="btn btn-sm btn-outline btn-error gap-2"
                                         onClick={() => {
-                                            if (confirm(`Cancel order #${order.id}? This cannot be undone.`)) {
+                                            if (confirm(t('account.orders.cancel_confirm', { id: order.id }))) {
                                                 router.post(route('account.orders.cancel', order.id));
                                             }
                                         }}
@@ -164,7 +168,7 @@ function OrdersTab({ orders }) {
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
-                                        Cancel Order
+                                        {t('account.orders.cancel_btn')}
                                     </button>
                                 )}
                             </div>
@@ -178,13 +182,14 @@ function OrdersTab({ orders }) {
 
 // ─── Favourites Tab ───────────────────────────────────────────────────────────
 function FavouritesTab({ wishlist }) {
+    const t = useTrans();
     if (!wishlist.length) {
         return (
             <div className="text-center py-16">
                 <div className="text-6xl mb-4">🤍</div>
-                <h3 className="text-xl font-semibold mb-2">No favourites yet</h3>
-                <p className="text-base-content/60 mb-6">Tap the heart on any product to save it here.</p>
-                <Link href={route('shop')} className="btn btn-primary">Browse Shop</Link>
+                <h3 className="text-xl font-semibold mb-2">{t('account.favourites.empty_title')}</h3>
+                <p className="text-base-content/60 mb-6">{t('account.favourites.empty_sub')}</p>
+                <Link href={route('shop')} className="btn btn-primary">{t('account.browse_shop')}</Link>
             </div>
         );
     }
@@ -202,6 +207,7 @@ function FavouritesTab({ wishlist }) {
 function AddressesTab({ addresses }) {
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const t = useTrans();
 
     const emptyForm = { name: '', phone: '', address: '', city: '', state: '', country: 'Egypt', zip: '', is_default: false };
 
@@ -257,34 +263,34 @@ function AddressesTab({ addresses }) {
     const AddressForm = ({ form, onSubmit, onCancel, submitLabel }) => (
         <form onSubmit={onSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-base-200 rounded-xl">
             <div className="form-control">
-                <label className="label"><span className="label-text">Full Name *</span></label>
+                <label className="label"><span className="label-text">{t('checkout.full_name')} *</span></label>
                 <input className="input input-bordered" value={form.data.name} onChange={e => form.setData('name', e.target.value)} required />
                 {form.errors.name && <span className="text-error text-xs mt-1">{form.errors.name}</span>}
             </div>
             <div className="form-control">
-                <label className="label"><span className="label-text">Phone</span></label>
+                <label className="label"><span className="label-text">{t('checkout.phone')}</span></label>
                 <input className="input input-bordered" value={form.data.phone} onChange={e => form.setData('phone', e.target.value)} />
             </div>
             <div className="form-control sm:col-span-2">
-                <label className="label"><span className="label-text">Street Address *</span></label>
+                <label className="label"><span className="label-text">{t('checkout.street_address')} *</span></label>
                 <input className="input input-bordered" value={form.data.address} onChange={e => form.setData('address', e.target.value)} required />
                 {form.errors.address && <span className="text-error text-xs mt-1">{form.errors.address}</span>}
             </div>
             <div className="form-control">
-                <label className="label"><span className="label-text">City *</span></label>
+                <label className="label"><span className="label-text">{t('checkout.city')} *</span></label>
                 <input className="input input-bordered" value={form.data.city} onChange={e => form.setData('city', e.target.value)} required />
                 {form.errors.city && <span className="text-error text-xs mt-1">{form.errors.city}</span>}
             </div>
             <div className="form-control">
-                <label className="label"><span className="label-text">State / Governorate</span></label>
+                <label className="label"><span className="label-text">{t('checkout.state')}</span></label>
                 <input className="input input-bordered" value={form.data.state} onChange={e => form.setData('state', e.target.value)} />
             </div>
             <div className="form-control">
-                <label className="label"><span className="label-text">Country *</span></label>
+                <label className="label"><span className="label-text">{t('checkout.country')} *</span></label>
                 <input className="input input-bordered" value={form.data.country} onChange={e => form.setData('country', e.target.value)} required />
             </div>
             <div className="form-control">
-                <label className="label"><span className="label-text">ZIP / Postal Code</span></label>
+                <label className="label"><span className="label-text">{t('checkout.zip')}</span></label>
                 <input className="input input-bordered" value={form.data.zip} onChange={e => form.setData('zip', e.target.value)} />
             </div>
             <div className="form-control sm:col-span-2 flex-row items-center gap-2">
@@ -295,11 +301,11 @@ function AddressesTab({ addresses }) {
                     onChange={e => form.setData('is_default', e.target.checked)}
                     id={`default-${submitLabel}`}
                 />
-                <label htmlFor={`default-${submitLabel}`} className="label-text cursor-pointer">Set as default address</label>
+                <label htmlFor={`default-${submitLabel}`} className="label-text cursor-pointer">{t('account.addresses.set_default_label')}</label>
             </div>
             <div className="sm:col-span-2 flex gap-2">
                 <button type="submit" className="btn btn-primary" disabled={form.processing}>{submitLabel}</button>
-                <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
+                <button type="button" className="btn btn-ghost" onClick={onCancel}>{t('account.addresses.cancel')}</button>
             </div>
         </form>
     );
@@ -312,19 +318,19 @@ function AddressesTab({ addresses }) {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    Add New Address
+                    {t('account.addresses.add_new')}
                 </button>
             )}
 
             {showForm && (
                 <div className="card bg-base-100 border border-base-300 shadow-sm">
                     <div className="card-body">
-                        <h3 className="card-title text-base">New Address</h3>
+                        <h3 className="card-title text-base">{t('account.addresses.new_address')}</h3>
                         <AddressForm
                             form={createForm}
                             onSubmit={submitCreate}
                             onCancel={() => { setShowForm(false); createForm.reset(); }}
-                            submitLabel="Save Address"
+                            submitLabel={t('account.addresses.save')}
                         />
                     </div>
                 </div>
@@ -334,8 +340,8 @@ function AddressesTab({ addresses }) {
             {!addresses.length && !showForm && (
                 <div className="text-center py-16">
                     <div className="text-6xl mb-4">📍</div>
-                    <h3 className="text-xl font-semibold mb-2">No saved addresses</h3>
-                    <p className="text-base-content/60">Add an address for faster checkout.</p>
+                    <h3 className="text-xl font-semibold mb-2">{t('account.addresses.empty_title')}</h3>
+                    <p className="text-base-content/60">{t('account.addresses.empty_sub')}</p>
                 </div>
             )}
 
@@ -343,12 +349,12 @@ function AddressesTab({ addresses }) {
                 <div key={addr.id} className="card bg-base-100 border border-base-300 shadow-sm">
                     {editingId === addr.id ? (
                         <div className="card-body">
-                            <h3 className="card-title text-base">Edit Address</h3>
+                            <h3 className="card-title text-base">{t('account.addresses.edit_address')}</h3>
                             <AddressForm
                                 form={editForm}
                                 onSubmit={(e) => submitEdit(e, addr.id)}
                                 onCancel={cancelEdit}
-                                submitLabel="Update Address"
+                                submitLabel={t('account.addresses.update')}
                             />
                         </div>
                     ) : (
@@ -357,7 +363,7 @@ function AddressesTab({ addresses }) {
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="font-semibold">{addr.name}</span>
-                                        {addr.is_default && <span className="badge badge-primary badge-sm">Default</span>}
+                                        {addr.is_default && <span className="badge badge-primary badge-sm">{t('account.addresses.default_badge')}</span>}
                                     </div>
                                     {addr.phone && <p className="text-sm text-base-content/70">{addr.phone}</p>}
                                     <p className="text-sm">{addr.address}</p>
@@ -368,9 +374,9 @@ function AddressesTab({ addresses }) {
                                         <button
                                             onClick={() => setDefault(addr.id)}
                                             className="btn btn-xs btn-ghost"
-                                            title="Set as default"
+                                            title={t('account.addresses.set_default')}
                                         >
-                                            Set default
+                                            {t('account.addresses.set_default')}
                                         </button>
                                     )}
                                     <button onClick={() => startEdit(addr)} className="btn btn-xs btn-ghost btn-square" title="Edit">
@@ -397,13 +403,14 @@ function AddressesTab({ addresses }) {
 export default function AccountIndex({ orders, wishlist, addresses }) {
     const { auth } = usePage().props;
     const user = auth.user;
+    const t = useTrans();
 
     const [activeTab, setActiveTab] = useState('orders');
 
     const tabs = [
         {
             key: 'orders',
-            label: 'My Orders',
+            label: t('account.tab_orders'),
             count: orders.length,
             icon: (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -413,7 +420,7 @@ export default function AccountIndex({ orders, wishlist, addresses }) {
         },
         {
             key: 'favourites',
-            label: 'Favourites',
+            label: t('account.tab_favourites'),
             count: wishlist.length,
             icon: (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -423,7 +430,7 @@ export default function AccountIndex({ orders, wishlist, addresses }) {
         },
         {
             key: 'addresses',
-            label: 'Addresses',
+            label: t('account.tab_addresses'),
             count: addresses.length,
             icon: (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -444,7 +451,7 @@ export default function AccountIndex({ orders, wishlist, addresses }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="My Account" />
+            <Head title={t('account.page_title')} />
 
             <div className="max-w-7xl mx-auto px-4 py-8">
                 <div className="flex flex-col lg:flex-row gap-6">
@@ -461,7 +468,7 @@ export default function AccountIndex({ orders, wishlist, addresses }) {
                                 <h2 className="card-title text-lg">{user.name}</h2>
                                 <p className="text-sm text-base-content/60">{user.email}</p>
                                 <Link href={route('profile.edit')} className="btn btn-sm btn-ghost mt-2">
-                                    Edit Profile
+                                    {t('account.edit_profile')}
                                 </Link>
                             </div>
                         </div>

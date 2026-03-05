@@ -8,6 +8,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { CreditCardIcon, TruckIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
+import { useTrans } from '@/i18n';
 
 export default function Index({ checkoutItems, total_price, vendor_id, tax_rate, tax_amount, prices_include_tax, grand_total }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -22,6 +23,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
         vendor_id: vendor_id || '',
         coupon_code: '',
     });
+    const t = useTrans();
 
     const [couponCode, setCouponCode]       = useState('');
     const [couponData, setCouponData]       = useState(null);
@@ -72,10 +74,10 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
 
     return (
         <AuthenticatedLayout>
-            <Head title="Checkout" />
+            <Head title={t('checkout.page_title')} />
 
             <div className="container mx-auto p-6 max-w-5xl">
-                <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+                <h1 className="text-2xl font-bold mb-6">{t('checkout.heading')}</h1>
 
                 <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row gap-6">
                     {/* Left column — Shipping & Payment */}
@@ -84,11 +86,11 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                         {/* Shipping Address */}
                         <div className="card bg-white dark:bg-gray-800 shadow">
                             <div className="card-body">
-                                <h2 className="text-lg font-semibold mb-4">Shipping Address</h2>
+                                <h2 className="text-lg font-semibold mb-4">{t('checkout.shipping_address')}</h2>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <InputLabel htmlFor="shipping_name" value="Full Name" />
+                                        <InputLabel htmlFor="shipping_name" value={t('checkout.full_name')} />
                                         <TextInput
                                             id="shipping_name"
                                             className="mt-1 block w-full"
@@ -101,7 +103,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="shipping_phone" value="Phone Number" />
+                                        <InputLabel htmlFor="shipping_phone" value={t('checkout.phone')} />
                                         <TextInput
                                             id="shipping_phone"
                                             className="mt-1 block w-full"
@@ -114,7 +116,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                     </div>
 
                                     <div className="sm:col-span-2">
-                                        <InputLabel htmlFor="shipping_address" value="Street Address" />
+                                        <InputLabel htmlFor="shipping_address" value={t('checkout.street_address')} />
                                         <TextInput
                                             id="shipping_address"
                                             className="mt-1 block w-full"
@@ -127,7 +129,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="shipping_city" value="City" />
+                                        <InputLabel htmlFor="shipping_city" value={t('checkout.city')} />
                                         <TextInput
                                             id="shipping_city"
                                             className="mt-1 block w-full"
@@ -140,7 +142,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="shipping_state" value="State / Governorate" />
+                                        <InputLabel htmlFor="shipping_state" value={t('checkout.state')} />
                                         <TextInput
                                             id="shipping_state"
                                             className="mt-1 block w-full"
@@ -152,7 +154,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="shipping_country" value="Country" />
+                                        <InputLabel htmlFor="shipping_country" value={t('checkout.country')} />
                                         <TextInput
                                             id="shipping_country"
                                             className="mt-1 block w-full"
@@ -165,7 +167,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="shipping_zip" value="ZIP / Postal Code" />
+                                        <InputLabel htmlFor="shipping_zip" value={t('checkout.zip')} />
                                         <TextInput
                                             id="shipping_zip"
                                             className="mt-1 block w-full"
@@ -182,7 +184,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                         {/* Payment Method */}
                         <div className="card bg-white dark:bg-gray-800 shadow">
                             <div className="card-body">
-                                <h2 className="text-lg font-semibold mb-4">Payment Method</h2>
+                                <h2 className="text-lg font-semibold mb-4">{t('checkout.payment_method')}</h2>
 
                                 <div className="flex flex-col gap-3">
                                     {/* Paymob Credit Card */}
@@ -203,8 +205,8 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                         />
                                         <CreditCardIcon className="size-6 text-blue-600" />
                                         <div>
-                                            <p className="font-medium">Credit / Debit Card</p>
-                                            <p className="text-sm text-gray-500">Secure payment via Paymob</p>
+                                            <p className="font-medium">{t('checkout.credit_card')}</p>
+                                            <p className="text-sm text-gray-500">{t('checkout.credit_card_sub')}</p>
                                         </div>
                                     </label>
 
@@ -226,8 +228,8 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                         />
                                         <TruckIcon className="size-6 text-green-600" />
                                         <div>
-                                            <p className="font-medium">Cash on Delivery</p>
-                                            <p className="text-sm text-gray-500">Pay when your order arrives</p>
+                                            <p className="font-medium">{t('checkout.cod')}</p>
+                                            <p className="text-sm text-gray-500">{t('checkout.cod_sub')}</p>
                                         </div>
                                     </label>
                                 </div>
@@ -241,7 +243,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                     <div className="lg:w-80">
                         <div className="card bg-white dark:bg-gray-800 shadow sticky top-6">
                             <div className="card-body">
-                                <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+                                <h2 className="text-lg font-semibold mb-4">{t('checkout.order_summary')}</h2>
 
                                 {(checkoutItems || []).map((group) => (
                                     <div key={group.user?.id} className="mb-4">
@@ -266,10 +268,10 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                 {/* Tax line — only when no coupon (coupon section has its own tax row) */}
                                 {tax_rate > 0 && !couponData && (
                                     <div className="flex justify-between text-sm text-base-content/70 mb-2">
-                                        <span>Tax ({tax_rate}%{prices_include_tax ? ' incl.' : ''})</span>
+                                        <span>{t('checkout.tax', { rate: tax_rate })}{prices_include_tax ? ' ' + t('cart.tax_incl') : ''}</span>
                                         <span>
                                             {prices_include_tax
-                                                ? 'Included'
+                                                ? t('cart.included')
                                                 : <CurrencyFormatter amount={tax_amount} />}
                                         </span>
                                     </div>
@@ -278,12 +280,12 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                 {/* Coupon Code */}
                                 {!couponData ? (
                                     <div className="mb-3">
-                                        <p className="text-sm font-medium mb-1 text-base-content/70">Have a coupon?</p>
+                                        <p className="text-sm font-medium mb-1 text-base-content/70">{t('checkout.have_coupon')}</p>
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
                                                 className="input input-bordered input-sm flex-1 uppercase"
-                                                placeholder="ENTER CODE"
+                                                placeholder={t('checkout.coupon_placeholder')}
                                                 value={couponCode}
                                                 onChange={e => setCouponCode(e.target.value.toUpperCase())}
                                                 onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyCoupon())}
@@ -294,7 +296,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                                 onClick={applyCoupon}
                                                 disabled={couponLoading || !couponCode.trim()}
                                             >
-                                                {couponLoading ? <span className="loading loading-spinner loading-xs" /> : 'Apply'}
+                                                {couponLoading ? <span className="loading loading-spinner loading-xs" /> : t('checkout.apply_coupon')}
                                             </button>
                                         </div>
                                         {couponError && <p className="text-error text-xs mt-1">{couponError}</p>}
@@ -303,7 +305,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                     <div className="flex items-center justify-between bg-success/10 border border-success/30 rounded-lg px-3 py-2 mb-3">
                                         <div>
                                             <span className="badge badge-success badge-sm mr-2">{couponData.code}</span>
-                                            <span className="text-sm text-success font-medium">Coupon applied!</span>
+                                            <span className="text-sm text-success font-medium">{t('checkout.coupon_applied')}</span>
                                         </div>
                                         <button type="button" onClick={removeCoupon} className="btn btn-ghost btn-xs text-error">✕</button>
                                     </div>
@@ -313,19 +315,19 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                 {couponData && (
                                     <>
                                         <div className="flex justify-between text-sm text-base-content/70 mb-1">
-                                            <span>Subtotal</span>
+                                            <span>{t('checkout.subtotal')}</span>
                                             <CurrencyFormatter amount={total_price} />
                                         </div>
                                         <div className="flex justify-between text-sm text-success mb-1">
-                                            <span>Discount ({couponData.code})</span>
+                                            <span>{t('checkout.discount', { code: couponData.code })}</span>
                                             <span>- <CurrencyFormatter amount={couponData.discount_amount} /></span>
                                         </div>
                                         {tax_rate > 0 && (
                                             <div className="flex justify-between text-sm text-base-content/70 mb-1">
-                                                <span>Tax ({tax_rate}%{prices_include_tax ? ' incl.' : ''})</span>
+                                                <span>{t('checkout.tax', { rate: tax_rate })}{prices_include_tax ? ' ' + t('cart.tax_incl') : ''}</span>
                                                 <span>
                                                     {prices_include_tax
-                                                        ? 'Included'
+                                                        ? t('cart.included')
                                                         : <CurrencyFormatter amount={effectiveTaxAmount} />}
                                                 </span>
                                             </div>
@@ -334,7 +336,7 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                 )}
 
                                 <div className="flex justify-between font-bold text-base">
-                                    <span>Total</span>
+                                    <span>{t('cart.total')}</span>
                                     <CurrencyFormatter amount={effectiveGrandTotal} />
                                 </div>
 
@@ -344,17 +346,17 @@ export default function Index({ checkoutItems, total_price, vendor_id, tax_rate,
                                     disabled={processing}
                                 >
                                     {processing
-                                        ? 'Processing...'
+                                        ? t('checkout.processing')
                                         : data.payment_method === 'paymob_cc'
-                                        ? 'Pay with Card'
-                                        : 'Place Order'}
+                                        ? t('checkout.pay_card')
+                                        : t('checkout.place_order')}
                                 </PrimaryButton>
 
                                 <Link
                                     href={route('cart.index')}
                                     className="block text-center mt-3 text-sm text-gray-500 hover:underline"
                                 >
-                                    ← Back to cart
+                                    {t('checkout.back_to_cart')}
                                 </Link>
                             </div>
                         </div>

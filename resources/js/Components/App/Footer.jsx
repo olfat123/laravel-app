@@ -1,7 +1,9 @@
 import { Link } from '@inertiajs/react';
+import { useTrans } from '@/i18n';
 
 export default function Footer() {
     const year = new Date().getFullYear();
+    const t = useTrans();
 
     return (
         <footer className="bg-slate-900 text-slate-300">
@@ -11,10 +13,10 @@ export default function Footer() {
                     {/* Brand */}
                     <div className="lg:col-span-1">
                         <Link href={route('home')} className="text-white text-2xl font-extrabold tracking-tight">
-                            Store
+                            {t('footer.brand')}
                         </Link>
                         <p className="mt-4 text-sm leading-relaxed text-slate-400">
-                            Discover thousands of products from trusted vendors — all in one place.
+                            {t('footer.tagline')}
                         </p>
                         {/* Social icons */}
                         <div className="mt-6 flex gap-3">
@@ -39,27 +41,27 @@ export default function Footer() {
 
                     {/* Quick links */}
                     <div>
-                        <h3 className="text-white text-sm font-semibold uppercase tracking-widest mb-5">Quick Links</h3>
+                        <h3 className="text-white text-sm font-semibold uppercase tracking-widest mb-5">{t('footer.quick_links')}</h3>
                         <ul className="space-y-3 text-sm">
-                            <li><Link href={route('home')} className="hover:text-white transition-colors">Home</Link></li>
-                            <li><Link href={route('shop')} className="hover:text-white transition-colors">Shop</Link></li>
-                            <li><Link href={route('cart.index')} className="hover:text-white transition-colors">Cart</Link></li>
+                            <li><Link href={route('home')} className="hover:text-white transition-colors">{t('footer.home')}</Link></li>
+                            <li><Link href={route('shop')} className="hover:text-white transition-colors">{t('footer.shop')}</Link></li>
+                            <li><Link href={route('cart.index')} className="hover:text-white transition-colors">{t('footer.cart')}</Link></li>
                         </ul>
                     </div>
 
                     {/* Account */}
                     <div>
-                        <h3 className="text-white text-sm font-semibold uppercase tracking-widest mb-5">Account</h3>
+                        <h3 className="text-white text-sm font-semibold uppercase tracking-widest mb-5">{t('footer.account')}</h3>
                         <ul className="space-y-3 text-sm">
-                            <li><Link href={route('login')} className="hover:text-white transition-colors">Login</Link></li>
-                            <li><Link href={route('register')} className="hover:text-white transition-colors">Register</Link></li>
-                            <li><Link href={route('profile.edit')} className="hover:text-white transition-colors">My Profile</Link></li>
+                            <li><Link href={route('login')} className="hover:text-white transition-colors">{t('footer.login')}</Link></li>
+                            <li><Link href={route('register')} className="hover:text-white transition-colors">{t('footer.register')}</Link></li>
+                            <li><Link href={route('profile.edit')} className="hover:text-white transition-colors">{t('footer.my_profile')}</Link></li>
                         </ul>
                     </div>
 
                     {/* Contact / info */}
                     <div>
-                        <h3 className="text-white text-sm font-semibold uppercase tracking-widest mb-5">Contact</h3>
+                        <h3 className="text-white text-sm font-semibold uppercase tracking-widest mb-5">{t('footer.contact')}</h3>
                         <ul className="space-y-3 text-sm">
                             <li className="flex items-start gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mt-0.5 shrink-0 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -86,10 +88,10 @@ export default function Footer() {
 
                 {/* Bottom bar */}
                 <div className="border-t border-slate-800 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-500">
-                    <p>© {year} Store. All rights reserved.</p>
+                    <p>{t('footer.copyright', { year })}</p>
                     <div className="flex gap-5">
-                        <a href="#" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
-                        <a href="#" className="hover:text-slate-300 transition-colors">Terms of Service</a>
+                        <a href="#" className="hover:text-slate-300 transition-colors">{t('footer.privacy')}</a>
+                        <a href="#" className="hover:text-slate-300 transition-colors">{t('footer.terms')}</a>
                     </div>
                 </div>
             </div>

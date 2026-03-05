@@ -47,17 +47,50 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Tabs::make('Translations')
+                    ->columnSpanFull()
+                    ->tabs([
+                        Forms\Components\Tabs\Tab::make('English')
+                            ->schema([
+                                Forms\Components\Grid::make()
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->live(onBlur: true)
+                                            ->required()
+                                            ->afterStateUpdated(function (String $operation, $state, Callable $set) {
+                                                $set('slug', Str::slug($state));
+                                            }),
+                                        TextInput::make('slug')
+                                            ->required()
+                                            ->maxLength(255),
+                                    ]),
+                                Forms\Components\RichEditor::make('description')
+                                    ->required()
+                                    ->toolbarButtons([
+                                        'blockquote', 'bold', 'bulletList',
+                                        'h2', 'h3', 'italic', 'link',
+                                        'orderedList', 'redo', 'strike',
+                                        'underline', 'undo', 'table',
+                                    ]),
+                            ]),
+                        Forms\Components\Tabs\Tab::make('Arabic (عربي)')
+                            ->schema([
+                                TextInput::make('title_ar')
+                                    ->label('Title (Arabic — العنوان بالعربي)')
+                                    ->extraInputAttributes(['dir' => 'rtl', 'lang' => 'ar']),
+                                Forms\Components\RichEditor::make('description_ar')
+                                    ->label('Description (Arabic — الوصف بالعربي)')
+                                    ->extraAttributes(['dir' => 'rtl', 'lang' => 'ar'])
+                                    ->toolbarButtons([
+                                        'blockquote', 'bold', 'bulletList',
+                                        'h2', 'h3', 'italic', 'link',
+                                        'orderedList', 'redo', 'strike',
+                                        'underline', 'undo', 'table',
+                                    ]),
+                            ]),
+                    ]),
                 Forms\Components\Grid::make()
                     ->schema([
-                        TextInput::make('title')
-                            ->live(onBlur: true)
-                            ->required()
-                            ->afterStateUpdated(function (String $operation, $state, Callable $set) {
-                                $set('slug', Str::slug($state));
-                            }),
-                        TextInput::make('slug')
-                            ->required()
-                            ->maxLength(255),
                         Select::make('department_id')
                             ->relationship('department', 'name')
                             ->label(__('Department'))
@@ -82,27 +115,8 @@ class ProductResource extends Resource
                             ->label(__('Category'))
                             ->preload()
                             ->searchable()
-                            ->required()
-
+                            ->required(),
                     ]),
-                Forms\Components\RichEditor::make('description')
-                    ->required()
-                    ->toolbarButtons([
-                        'blockquote',
-                        'bold',
-                        'bulletList',
-                        'h2',
-                        'h3',
-                        'italic',
-                        'link',
-                        'orderedList',
-                        'redo',
-                        'strike',
-                        'underline',
-                        'undo',
-                        'table'
-                    ])
-                    ->columnSpan(2),
                 TextInput::make('price')
                     ->required()
                     ->numeric(),

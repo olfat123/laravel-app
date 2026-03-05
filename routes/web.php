@@ -8,6 +8,9 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\LanguageController;
+
+Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
 
 Route::get('/', [ProductController::class, 'home'])->name('home');
 Route::get('/shop', [ProductController::class, 'shop'])->name('shop');

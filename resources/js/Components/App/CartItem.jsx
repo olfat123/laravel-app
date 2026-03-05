@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import CurrencyFormatter from "@/Components/CurrencyFormatter";
 import { Link, router } from "@inertiajs/react";
 import { productRoute } from '@/Helper';
+import { useTrans } from '@/i18n';
 
 export default function CartItem({ item }) {
     const [qty, setQty] = useState(item.quantity);
     const [error, setError] = useState('');
+    const t = useTrans();
 
     // Sync local qty when server updates item.quantity
     useEffect(() => {
@@ -79,7 +81,7 @@ export default function CartItem({ item }) {
                             >+</button>
                         </div>
                         {error && <span className="text-error text-xs">{error}</span>}
-                        <button onClick={onDeleteClick} className="btn btn-sm btn-ghost text-error">Remove</button>
+                        <button onClick={onDeleteClick} className="btn btn-sm btn-ghost text-error">{t('cart_item.remove')}</button>
                     </div>
                     <div className="font-bold text-lg">
                         <CurrencyFormatter amount={item.price * qty} />

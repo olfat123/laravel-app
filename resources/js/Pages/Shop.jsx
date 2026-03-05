@@ -4,14 +4,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import ProductItem from '@/Components/App/ProductItem';
 import ProductFilterPanel from '@/Components/App/ProductFilterPanel';
 import { AdjustmentsHorizontalIcon, XMarkIcon } from '@heroicons/react/24/outline';
-
-const SORT_OPTIONS = [
-    { value: 'newest',     label: 'Newest' },
-    { value: 'price_asc',  label: 'Price: Low → High' },
-    { value: 'price_desc', label: 'Price: High → Low' },
-    { value: 'name_asc',   label: 'Name: A → Z' },
-    { value: 'name_desc',  label: 'Name: Z → A' },
-];
+import { useTrans } from '@/i18n';
 
 function useDebounce(value, delay = 400) {
     const [debounced, setDebounced] = useState(value);
@@ -26,7 +19,15 @@ export default function Shop({ products, departments = [], stores = [], filters 
     // PHP serializes an empty array as `[]` in JSON, not `{}`, so guard against
     // filters being a JS array or null/undefined before reading its properties.
     const f = (filters && !Array.isArray(filters)) ? filters : {};
+    const t = useTrans();
 
+    const SORT_OPTIONS = [
+        { value: 'newest',     label: t('shop.sort.newest') },
+        { value: 'price_asc',  label: t('shop.sort.price_asc') },
+        { value: 'price_desc', label: t('shop.sort.price_desc') },
+        { value: 'name_asc',   label: t('shop.sort.name_asc') },
+        { value: 'name_desc',  label: t('shop.sort.name_desc') },
+    ];
     const [search, setSearch]             = useState(f.search        ?? '');
     const [departmentId, setDepartmentId] = useState(f.department_id ?? '');
     const [categoryId, setCategoryId]     = useState(f.category_id   ?? '');
@@ -99,11 +100,11 @@ export default function Shop({ products, departments = [], stores = [], filters 
             <div className="bg-base-200 border-b border-base-300">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
-                        <h1 className="text-3xl font-bold text-base-content">Shop</h1>
+                        <h1 className="text-3xl font-bold text-base-content">{t('shop.heading')}</h1>
                         <p className="mt-1 text-base-content/60">
                             {products.meta?.total
-                                ? `${products.meta.total} product${products.meta.total !== 1 ? 's' : ''} found`
-                                : 'Browse all products'}
+                                ? t('shop.products_found', { count: products.meta.total })
+                                : t('shop.browse_all')}
                         </p>
                     </div>
 
@@ -124,7 +125,7 @@ export default function Shop({ products, departments = [], stores = [], filters 
                             onClick={() => setSidebarOpen(true)}
                         >
                             <AdjustmentsHorizontalIcon className="size-4" />
-                            Filters
+                            {t('shop.filters')}
                             {activeFilterCount > 0 && (
                                 <span className="badge badge-primary badge-xs ml-1">{activeFilterCount}</span>
                             )}
@@ -139,7 +140,7 @@ export default function Shop({ products, departments = [], stores = [], filters 
                     <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
                     <div className="relative ml-auto w-72 h-full bg-base-100 shadow-xl overflow-y-auto p-6 flex flex-col gap-4">
                         <div className="flex items-center justify-between mb-2">
-                            <h2 className="text-lg font-bold">Filters</h2>
+                            <h2 className="text-lg font-bold">{t('shop.filters')}</h2>
                             <button onClick={() => setSidebarOpen(false)}>
                                 <XMarkIcon className="size-5" />
                             </button>
@@ -155,9 +156,9 @@ export default function Shop({ products, departments = [], stores = [], filters 
                 <aside className="hidden lg:block w-64 flex-shrink-0">
                     <div className="card bg-base-100 shadow-sm border border-base-300 p-5 sticky top-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="font-bold text-base">Filters</h2>
+                            <h2 className="font-bold text-base">{t('shop.filters')}</h2>
                             {activeFilterCount > 0 && (
-                                <span className="badge badge-primary badge-sm">{activeFilterCount} active</span>
+                                <span className="badge badge-primary badge-sm">{activeFilterCount} {t('shop.active')}</span>
                             )}
                         </div>
                         <ProductFilterPanel {...filterPanelProps} />
@@ -171,10 +172,10 @@ export default function Shop({ products, departments = [], stores = [], filters 
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7H4a1 1 0 00-1 1v10a1 1 0 001 1h16a1 1 0 001-1V8a1 1 0 00-1-1z" />
                             </svg>
-                            <p className="text-xl font-medium">No products found</p>
+                            <p className="text-xl font-medium">{t('shop.no_products')}</p>
                             {activeFilterCount > 0 && (
                                 <button onClick={clearAll} className="btn btn-ghost btn-sm mt-3 text-primary">
-                                    Clear filters
+                                    {t('shop.clear_filters')}
                                 </button>
                             )}
                         </div>

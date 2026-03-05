@@ -7,6 +7,7 @@ use Tighten\Ziggy\Ziggy;
 use Illuminate\Http\Request;
 use App\Services\CartService;
 use App\Models\Wishlist;
+use Illuminate\Support\Facades\App;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -32,6 +33,16 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        // Apply stored locale
+        $locale = session('locale', config('app.locale', 'en'));
+        App::setLocale($locale);
+
+        // Load translation JSON
+        $translationPath = base_path("lang/{$locale}.json");
+        $translations = file_exists($translationPath)
+            ? json_decode(file_get_contents($translationPath), true)
+            : [];
+
         $cartService = app(CartService::class);
         $totalQuantity = $cartService->getTotalQuantity();
         $totalPrice = $cartService->getTotalPrice();
@@ -55,6 +66,8 @@ class HandleInertiaRequests extends Middleware
             'wishlistedProductIds' => fn () => $request->user()
                 ? Wishlist::where('user_id', $request->user()->id)->pluck('product_id')->toArray()
                 : [],
+            'locale'       => $locale,
+            'translations' => $translations,
         ];
     }
 }

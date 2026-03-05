@@ -103,6 +103,23 @@ class Product extends Model implements HasMedia
         return $this->isOnSale() ? (float) $this->sale_price : (float) $this->price;
     }
 
+    protected $fillable = [
+        'title',
+        'title_ar',
+        'slug',
+        'description',
+        'description_ar',
+        'price',
+        'sale_price',
+        'sale_start',
+        'sale_end',
+        'quantity',
+        'status',
+        'department_id',
+        'category_id',
+        'created_by',
+    ];
+
     protected $casts = [
         'sale_start' => 'datetime',
         'sale_end'   => 'datetime',
