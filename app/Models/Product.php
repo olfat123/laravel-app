@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Models\OrderItem;
+use App\Models\ProductView;
 
 class Product extends Model implements HasMedia
 {
@@ -58,6 +60,16 @@ class Product extends Model implements HasMedia
         return $this->hasMany(ProductVariation::class, 'product_id');
     }
 
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class, 'product_id');
+    }
+
+    public function views(): HasMany
+    {
+        return $this->hasMany(ProductView::class, 'product_id');
+    }
+
     public function scopeForVendor(Builder $query): Builder
     {
         return $query->where('created_by', auth()->user()->id);
@@ -71,6 +83,11 @@ class Product extends Model implements HasMedia
     public function scopeForWebsite(Builder $query): Builder
     {
         return $query->active();
+    }
+
+    public function scopeFeatured(Builder $query): Builder
+    {
+        return $query->where('is_featured', true);
     }
 
     /**
@@ -115,6 +132,7 @@ class Product extends Model implements HasMedia
         'sale_end',
         'quantity',
         'status',
+        'is_featured',
         'department_id',
         'category_id',
         'created_by',

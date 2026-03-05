@@ -396,5 +396,13 @@
 
     "home.blog.heading": "Latest from the Blog",
     "home.blog.subtext": "News, stories and insights",
-    "home.blog.view_all": "View all posts"
+    "home.blog.view_all": "View all posts",
+
+    "product.related_products": "You may also like",
+
+    "home.best_sellers.heading": "Best Sellers",
+    "home.best_sellers.subtext": "Our most popular products",
+
+    "home.recently_viewed.heading": "Recently Viewed",
+    "home.recently_viewed.subtext": "Continue where you left off"
 }

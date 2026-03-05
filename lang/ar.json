@@ -396,5 +396,13 @@
 
     "home.blog.heading": "آخر المقالات",
     "home.blog.subtext": "أخبار وقصص ورؤى",
-    "home.blog.view_all": "عرض جميع المقالات"
+    "home.blog.view_all": "عرض جميع المقالات",
+
+    "product.related_products": "قد يعجبك أيضًا",
+
+    "home.best_sellers.heading": "الأكثر مبيعاً",
+    "home.best_sellers.subtext": "منتجاتنا الأكثر شعبية",
+
+    "home.recently_viewed.heading": "شاهدته مؤخرًا",
+    "home.recently_viewed.subtext": "تابع من حيث توقفت"
 }

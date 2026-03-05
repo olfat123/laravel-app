@@ -8,10 +8,11 @@ import isEqual from 'lodash/isEqual';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import CurrencyFormatter from '@/Components/CurrencyFormatter';
 import Carousel from '@/Components/Carousel';
+import ProductItem from '@/Components/App/ProductItem';
 import { Head } from '@inertiajs/react';
 import { useTrans, useLocale } from '@/i18n';
 
-export default function Show({ product, variationOptions }) {
+export default function Show({ product, variationOptions, relatedProducts }) {
     const form = useForm({
         product_id: product.id,
         option_ids: Object.values(variationOptions || {}),
@@ -242,6 +243,22 @@ export default function Show({ product, variationOptions }) {
                     </div>
                 </div>
             </div>
+
+            {/* ── Related Products ───────────────────────────────── */}
+            {relatedProducts?.data?.length > 0 && (
+                <section className="py-16 bg-base-200">
+                    <div className="container mx-auto px-4">
+                        <h2 className="text-2xl font-bold text-base-content mb-8">
+                            {t('product.related_products')}
+                        </h2>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                            {relatedProducts.data.map(p => (
+                                <ProductItem key={p.id} product={p} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
         </AuthenticatedLayout>
     );
 }

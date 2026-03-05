@@ -14,7 +14,7 @@ const DEPT_COLORS = [
     'from-yellow-500 to-orange-600',
 ];
 
-export default function Home({ departments, featuredProducts, latestPosts }) {
+export default function Home({ departments, featuredProducts, mostSellingProducts, latestViewedProducts, latestPosts }) {
     const t = useTrans();
     const locale = useLocale();
     return (
@@ -108,6 +108,50 @@ export default function Home({ departments, featuredProducts, latestPosts }) {
                         </div>
                         <div className="mt-10 text-center sm:hidden">
                             <Link href={route('shop')} className="btn btn-outline btn-wide">{t('home.featured.view_all_mobile')}</Link>
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* ── Best Sellers ────────────────────────────────────── */}
+            {mostSellingProducts?.data?.length > 0 && (
+                <section className="py-20 bg-base-100">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-end justify-between mb-12">
+                            <div>
+                                <h2 className="text-3xl md:text-4xl font-bold text-base-content">{t('home.best_sellers.heading')}</h2>
+                                <p className="mt-3 text-base-content/60">{t('home.best_sellers.subtext')}</p>
+                            </div>
+                            <Link href={route('shop')} className="btn btn-ghost gap-1 hidden sm:flex">
+                                {t('home.featured.view_all')}
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </Link>
+                        </div>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                            {mostSellingProducts.data.map((product) => (
+                                <ProductItem product={product} key={product.id} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* ── Recently Viewed ─────────────────────────────────── */}
+            {latestViewedProducts?.data?.length > 0 && (
+                <section className="py-20 bg-base-200">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-end justify-between mb-12">
+                            <div>
+                                <h2 className="text-3xl md:text-4xl font-bold text-base-content">{t('home.recently_viewed.heading')}</h2>
+                                <p className="mt-3 text-base-content/60">{t('home.recently_viewed.subtext')}</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                            {latestViewedProducts.data.map((product) => (
+                                <ProductItem product={product} key={product.id} />
+                            ))}
                         </div>
                     </div>
                 </section>

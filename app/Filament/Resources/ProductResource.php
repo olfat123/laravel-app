@@ -14,6 +14,7 @@ use App\Enums\ProductStatusEnum;
 use Filament\Resources\Resource;
 use Filament\Resources\Pages\Page;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Section;
@@ -126,6 +127,10 @@ class ProductResource extends Resource
                     ->options(ProductStatusEnum::labels())
                     ->default(ProductStatusEnum::DRAFT->value)
                     ->required(),
+                Toggle::make('is_featured')
+                    ->label('Featured Product')
+                    ->helperText('Show this product in the Featured section on the homepage.')
+                    ->columnSpanFull(),
                 Section::make('Sale Price')
                     ->description('Set a sale price and optionally restrict it to a date range.')
                     ->collapsible()
@@ -168,6 +173,9 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->colors(ProductStatusEnum::colors()),
+                Tables\Columns\IconColumn::make('is_featured')
+                    ->boolean()
+                    ->label('Featured'),
                 Tables\Columns\TextColumn::make('department.name'),
                 Tables\Columns\TextColumn::make('category.name'),
                 Tables\Columns\TextColumn::make('created_at')
