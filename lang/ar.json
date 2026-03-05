@@ -378,5 +378,23 @@
     "profile.delete.modal_desc": "بمجرد حذف حسابك، سيتم حذف جميع موارده وبياناته بشكل دائم. يرجى إدخال كلمة مرورك لتأكيد رغبتك في الحذف الدائم.",
 
     "shop.filters": "الفلاتر",
-    "shop.active": "نشط"
+    "shop.active": "نشط",
+
+    "nav.blog": "المدونة",
+
+    "blog.page_title": "المدونة",
+    "blog.badge": "أحدث المقالات",
+    "blog.heading": "مدونتنا",
+    "blog.subtitle": "قصص ونصائح ورؤى من فريقنا.",
+    "blog.read_more": "اقرأ المزيد",
+    "blog.no_posts": "لا توجد مقالات بعد. عد قريباً!",
+    "blog.all_categories": "الكل",
+    "blog.published_on": "نُشر في {date}",
+    "blog.by": "بقلم {author}",
+    "blog.back": "العودة إلى المدونة",
+    "blog.related_posts": "مقالات ذات صلة",
+
+    "home.blog.heading": "آخر المقالات",
+    "home.blog.subtext": "أخبار وقصص ورؤى",
+    "home.blog.view_all": "عرض جميع المقالات"
 }

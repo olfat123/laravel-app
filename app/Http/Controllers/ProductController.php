@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use App\Http\Filters\ProductFilter;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductListResource;
+use App\Http\Resources\PostListResource;
+use App\Models\Post;
 
 class ProductController extends Controller
 {
@@ -31,6 +33,9 @@ class ProductController extends Controller
         return Inertia::render('Home', [
             'departments'      => $departments,
             'featuredProducts' => ProductListResource::collection($featuredProducts),
+            'latestPosts'      => PostListResource::collection(
+                Post::published()->with(['author', 'category'])->latest('published_at')->take(3)->get()
+            ),
         ]);
     }
 

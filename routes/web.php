@@ -9,8 +9,13 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\BlogController;
 
 Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
+
+// Blog
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{post:slug}', [BlogController::class, 'show'])->name('blog.show');
 
 Route::get('/', [ProductController::class, 'home'])->name('home');
 Route::get('/shop', [ProductController::class, 'shop'])->name('shop');

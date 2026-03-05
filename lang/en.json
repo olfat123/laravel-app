@@ -378,5 +378,23 @@
     "profile.delete.modal_desc": "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.",
 
     "shop.filters": "Filters",
-    "shop.active": "active"
+    "shop.active": "active",
+
+    "nav.blog": "Blog",
+
+    "blog.page_title": "Blog",
+    "blog.badge": "Latest Articles",
+    "blog.heading": "Our Blog",
+    "blog.subtitle": "Stories, tips and insights from our team.",
+    "blog.read_more": "Read More",
+    "blog.no_posts": "No posts yet. Check back soon!",
+    "blog.all_categories": "All",
+    "blog.published_on": "Published on {date}",
+    "blog.by": "By {author}",
+    "blog.back": "Back to Blog",
+    "blog.related_posts": "Related Posts",
+
+    "home.blog.heading": "Latest from the Blog",
+    "home.blog.subtext": "News, stories and insights",
+    "home.blog.view_all": "View all posts"
 }

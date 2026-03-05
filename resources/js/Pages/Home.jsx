@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import ProductItem from '@/Components/App/ProductItem';
-import { useTrans } from '@/i18n';
+import { useTrans, useLocale } from '@/i18n';
 
 const DEPT_COLORS = [
     'from-violet-500 to-purple-600',
@@ -14,8 +14,9 @@ const DEPT_COLORS = [
     'from-yellow-500 to-orange-600',
 ];
 
-export default function Home({ departments, featuredProducts }) {
+export default function Home({ departments, featuredProducts, latestPosts }) {
     const t = useTrans();
+    const locale = useLocale();
     return (
         <AuthenticatedLayout>
             <Head title="Welcome" />
@@ -107,6 +108,61 @@ export default function Home({ departments, featuredProducts }) {
                         </div>
                         <div className="mt-10 text-center sm:hidden">
                             <Link href={route('shop')} className="btn btn-outline btn-wide">{t('home.featured.view_all_mobile')}</Link>
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* ── Latest Blog Posts ───────────────────────────────── */}
+            {latestPosts?.data?.length > 0 && (
+                <section className="py-20 bg-base-100">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-end justify-between mb-12">
+                            <div>
+                                <h2 className="text-3xl md:text-4xl font-bold text-base-content">{t('home.blog.heading')}</h2>
+                                <p className="mt-3 text-base-content/60">{t('home.blog.subtext')}</p>
+                            </div>
+                            <Link href={route('blog.index')} className="btn btn-ghost gap-1 hidden sm:flex">
+                                {t('home.blog.view_all')}
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </Link>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {latestPosts.data.map(post => {
+                                const title   = locale === 'ar' && post.title_ar   ? post.title_ar   : post.title;
+                                const excerpt = locale === 'ar' && post.excerpt_ar ? post.excerpt_ar : post.excerpt;
+                                return (
+                                    <article key={post.id} className="card bg-base-200 shadow hover:shadow-lg transition-shadow overflow-hidden">
+                                        {post.cover_thumb ? (
+                                            <figure className="h-44 overflow-hidden">
+                                                <img src={post.cover_thumb} alt={title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                                            </figure>
+                                        ) : (
+                                            <div className="h-44 bg-gradient-to-br from-primary/15 to-secondary/15" />
+                                        )}
+                                        <div className="card-body gap-2">
+                                            {post.published_at && (
+                                                <p className="text-xs text-base-content/40 uppercase tracking-wider">
+                                                    {new Date(post.published_at).toLocaleDateString(
+                                                        locale === 'ar' ? 'ar-EG' : 'en-US',
+                                                        { year: 'numeric', month: 'short', day: 'numeric' }
+                                                    )}
+                                                </p>
+                                            )}
+                                            <h3 className="font-bold text-lg line-clamp-2 leading-snug">{title}</h3>
+                                            {excerpt && <p className="text-base-content/60 text-sm line-clamp-2">{excerpt}</p>}
+                                            <Link href={route('blog.show', post.slug)} className="mt-2 text-primary text-sm font-semibold hover:underline">
+                                                {t('blog.read_more')} →
+                                            </Link>
+                                        </div>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                        <div className="mt-8 text-center sm:hidden">
+                            <Link href={route('blog.index')} className="btn btn-outline btn-wide">{t('home.blog.view_all')}</Link>
                         </div>
                     </div>
                 </section>

@@ -26,6 +26,7 @@ export default function Navbar() {
         <div className="flex-1 gap-2">
             <Link href={route('home')} className="btn btn-ghost text-xl font-bold">{t('nav.brand')}</Link>
             <Link href={route('shop')} className="btn btn-ghost btn-sm hidden sm:inline-flex">{t('nav.shop')}</Link>
+            <Link href={route('blog.index')} className="btn btn-ghost btn-sm hidden sm:inline-flex">{t('nav.blog')}</Link>
         </div>
         <div className="flex flex-none gap-4">
             <div className="dropdown dropdown-end">
