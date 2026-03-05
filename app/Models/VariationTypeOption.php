@@ -15,6 +15,8 @@ class VariationTypeOption extends Model implements HasMedia
     
     public $timestamps = false;
 
+    protected $fillable = ['name', 'name_ar', 'variation_type_id'];
+
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')

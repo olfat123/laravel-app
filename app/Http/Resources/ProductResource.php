@@ -53,13 +53,15 @@ class ProductResource extends JsonResource
             ],
             'variationTypes' => $this->variationTypes->map(function ($variationType) {
                 return [
-                    'id' => $variationType->id,
+                    'id'   => $variationType->id,
                     'name' => $variationType->name,
+                    'name_ar' => $variationType->name_ar,
                     'type' => $variationType->type,
                     'options' => $variationType->options->map(function ($option) {
                         return [
-                            'id' => $option->id,
-                            'name' => $option->name,
+                            'id'      => $option->id,
+                            'name'    => $option->name,
+                            'name_ar' => $option->name_ar,
                             'images' => $option->getMedia('images')->map(function ($media) {
                                 return [
                                     'id' => $media->id,

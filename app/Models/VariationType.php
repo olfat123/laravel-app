@@ -9,6 +9,8 @@ class VariationType extends Model
 {
     public $timestamps = false;
 
+    protected $fillable = ['name', 'name_ar', 'product_id', 'type'];
+
     public function options(): HasMany
     {
         return $this->hasMany(VariationTypeOption::class, 'variation_type_id');

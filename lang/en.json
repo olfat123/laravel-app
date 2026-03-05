@@ -149,6 +149,7 @@
 
     "product.sale_badge": "SALE",
     "product.low_stock": "Only {count} left in stock!",
+    "product.only_left": "Only {count} left in stock!",
     "product.out_of_stock": "This product is out of stock.",
     "product.add_to_cart": "Add to Cart",
     "product.about": "About the item",

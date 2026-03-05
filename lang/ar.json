@@ -149,6 +149,7 @@
 
     "product.sale_badge": "تخفيض",
     "product.low_stock": "متبقي {count} فقط في المخزون!",
+    "product.only_left": "متبقي {count} فقط في المخزون!",
     "product.out_of_stock": "هذا المنتج غير متوفر.",
     "product.add_to_cart": "أضف إلى السلة",
     "product.about": "عن المنتج",

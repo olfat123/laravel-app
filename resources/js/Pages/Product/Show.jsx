@@ -128,13 +128,13 @@ export default function Show({ product, variationOptions }) {
         return (
             product.variationTypes.map((type) => (
                 <div key={type.id}>
-                    <p>{type.name}</p>
+                    <p>{(locale === 'ar' && type.name_ar) ? type.name_ar : type.name}</p>
                     {type.type === 'image' && 
                         <div className="flex gap-2 mb-4">
                             {type.options.map((option) => (
                                 <div onClick={() => chooseOption(type.id, option)} key={option.id}>
-                                    {option.images && <img src={option.images[0].thumb} 
-                                    alt={option.name} className={'w-[50px] ' + (
+                                    {option.images?.length > 0 && <img src={option.images[0].thumb} 
+                                    alt={(locale === 'ar' && option.name_ar) ? option.name_ar : option.name} className={'w-[50px] ' + (
                                         selectedOptions[type.id]?.id === option.id ? 
                                         'outline outline-4 outline-primary' : ''
                                     )}/>}
@@ -152,7 +152,7 @@ export default function Show({ product, variationOptions }) {
                                     checked={selectedOptions[type.id]?.id === option.id}
                                     onChange={() => chooseOption(type.id, option)}
                                     className="join-item btn"
-                                    aria-label={option.name}
+                                    aria-label={(locale === 'ar' && option.name_ar) ? option.name_ar : option.name}
                                 />
                             ))}
                         </div>
