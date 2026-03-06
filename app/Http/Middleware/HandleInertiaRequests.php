@@ -7,7 +7,9 @@ use Tighten\Ziggy\Ziggy;
 use Illuminate\Http\Request;
 use App\Services\CartService;
 use App\Models\Wishlist;
+use App\Models\Setting;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -33,8 +35,29 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        // Apply stored locale
-        $locale = session('locale', config('app.locale', 'en'));
+        // Load site settings (cached per-process, cleared on save)
+        $siteSettings = Cache::rememberForever('site_settings', function () {
+            $rows = Setting::whereIn('key', [
+                'currency', 'currency_locale', 'enabled_languages', 'default_language',
+            ])->pluck('value', 'key');
+
+            return [
+                'currency'           => $rows->get('currency', 'USD'),
+                'currency_locale'    => $rows->get('currency_locale', 'en-US'),
+                'available_locales'  => json_decode($rows->get('enabled_languages', '["en","ar"]'), true) ?: ['en'],
+                'default_language'   => $rows->get('default_language', 'en'),
+            ];
+        });
+
+        $availableLocales = $siteSettings['available_locales'];
+        $defaultLocale    = $siteSettings['default_language'];
+
+        // Apply stored locale — fall back to default if no longer enabled
+        $sessionLocale = session('locale');
+        $locale = ($sessionLocale && in_array($sessionLocale, $availableLocales))
+            ? $sessionLocale
+            : $defaultLocale;
+
         App::setLocale($locale);
 
         // Load translation JSON
@@ -66,8 +89,11 @@ class HandleInertiaRequests extends Middleware
             'wishlistedProductIds' => fn () => $request->user()
                 ? Wishlist::where('user_id', $request->user()->id)->pluck('product_id')->toArray()
                 : [],
-            'locale'       => $locale,
-            'translations' => $translations,
+            'locale'           => $locale,
+            'translations'     => $translations,
+            'currency'         => $siteSettings['currency'],
+            'currencyLocale'   => $siteSettings['currency_locale'],
+            'availableLocales' => $availableLocales,
         ];
     }
 }

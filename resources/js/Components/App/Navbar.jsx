@@ -6,7 +6,7 @@ import { productRoute } from '@/Helper';
 import { useTrans, useLocale } from '@/i18n';
 
 export default function Navbar() {
-    const { auth, totalQuantity, totalPrice, cartItems } = usePage().props;
+    const { auth, totalQuantity, totalPrice, cartItems, availableLocales = ['en', 'ar'] } = usePage().props;
     const user = auth.user;
     const t = useTrans();
     const locale = useLocale();
@@ -115,12 +115,25 @@ export default function Navbar() {
                 </>
             )}
             {/* Language switcher */}
-            <Link
-                href={route('language.switch', locale === 'ar' ? 'en' : 'ar')}
-                className="btn btn-ghost btn-sm"
-            >
-                {locale === 'ar' ? t('lang.switch_to_en') : t('lang.switch_to_ar')}
-            </Link>
+            {availableLocales.length > 1 && (
+                <div className="flex items-center gap-1">
+                    {availableLocales.map((l) =>
+                        l === locale ? (
+                            <span key={l} className="btn btn-sm btn-primary pointer-events-none">
+                                {l.toUpperCase()}
+                            </span>
+                        ) : (
+                            <Link
+                                key={l}
+                                href={route('language.switch', l)}
+                                className="btn btn-ghost btn-sm"
+                            >
+                                {l.toUpperCase()}
+                            </Link>
+                        )
+                    )}
+                </div>
+            )}
         </div>
     </div>
   )
