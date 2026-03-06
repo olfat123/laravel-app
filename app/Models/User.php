@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -47,27 +49,27 @@ class User extends Authenticatable
         ];
     }
 
-    public function vendor()
+    public function vendor(): HasOne
     {
         return $this->hasOne(Vendor::class, 'user_id', 'id');
     }
 
-    public function orders()
+    public function orders(): HasMany
     {
-        return $this->hasMany(\App\Models\Order::class, 'user_id');
+        return $this->hasMany(Order::class, 'user_id');
     }
 
-    public function vendorOrders()
+    public function vendorOrders(): HasMany
     {
-        return $this->hasMany(\App\Models\Order::class, 'vendor_user_id');
+        return $this->hasMany(Order::class, 'vendor_user_id');
     }
 
-    public function wishlistItems()
+    public function wishlistItems(): HasMany
     {
         return $this->hasMany(Wishlist::class);
     }
 
-    public function addresses()
+    public function addresses(): HasMany
     {
         return $this->hasMany(UserAddress::class)->orderByDesc('is_default');
     }

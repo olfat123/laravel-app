@@ -9,7 +9,7 @@ use App\Models\Wishlist;
 use App\Models\UserAddress;
 use App\Enums\OrderStatusEnum;
 use App\Services\CartService;
-use Illuminate\Http\Request;
+use App\Http\Requests\AddressRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\ProductListResource;
 
@@ -21,50 +21,44 @@ class AccountController extends Controller
 
         // Orders with items and product image
         $orders = Order::where('user_id', $user->id)
-            ->with(['items' => function ($q) {
-                $q->with(['product' => function ($q2) {
-                    $q2->withCount('variationTypes')->with(['media', 'user', 'department', 'category']);
-                }]);
-            }])
+            ->with(['items.product' => fn ($q) => $q
+                ->withCount('variationTypes')
+                ->with(['media', 'user', 'department', 'category']),
+            ])
             ->latest()
             ->get()
-            ->map(function ($order) {
-                return [
-                    'id'               => $order->id,
-                    'status'           => $order->status,
-                    'total_price'      => $order->total_price,
-                    'payment_method'   => $order->payment_method,
-                    'created_at'       => $order->created_at->format('M d, Y'),
-                    'shipping_name'    => $order->shipping_name,
-                    'shipping_address' => $order->shipping_address,
-                    'shipping_city'    => $order->shipping_city,
-                    'shipping_country' => $order->shipping_country,
-                    'items' => $order->items->map(function ($item) {
-                        $product = $item->product;
-                        return [
-                            'id'        => $item->id,
-                            'quantity'  => $item->quantity,
-                            'price'     => $item->price,
-                            'product'   => $product ? [
-                                'id'        => $product->id,
-                                'title'     => $product->title,
-                                'slug'      => $product->slug,
-                                'image_url' => $product->getFirstMediaUrl('images', 'small') ?: null,
-                            ] : null,
-                        ];
-                    }),
-                ];
-            });
+            ->map(fn ($order) => [
+                'id'               => $order->id,
+                'status'           => $order->status,
+                'total_price'      => $order->total_price,
+                'payment_method'   => $order->payment_method,
+                'created_at'       => $order->created_at->format('M d, Y'),
+                'shipping_name'    => $order->shipping_name,
+                'shipping_address' => $order->shipping_address,
+                'shipping_city'    => $order->shipping_city,
+                'shipping_country' => $order->shipping_country,
+                'items' => $order->items->map(fn ($item) => [
+                    'id'       => $item->id,
+                    'quantity' => $item->quantity,
+                    'price'    => $item->price,
+                    'product'  => $item->product ? [
+                        'id'        => $item->product->id,
+                        'title'     => $item->product->title,
+                        'slug'      => $item->product->slug,
+                        'image_url' => $item->product->getFirstMediaUrl('images', 'small') ?: null,
+                    ] : null,
+                ]),
+            ]);
 
         // Wishlist products
         $wishlistItems = Wishlist::where('user_id', $user->id)
-            ->with(['product' => function ($q) {
-                $q->withCount('variationTypes')
-                  ->with(['media', 'user', 'department', 'category']);
-            }])
+            ->with(['product' => fn ($q) => $q
+                ->withCount('variationTypes')
+                ->with(['media', 'user', 'department', 'category']),
+            ])
             ->get()
-            ->filter(fn($w) => $w->product !== null)
-            ->map(fn($w) => new ProductListResource($w->product));
+            ->filter(fn ($w) => $w->product !== null)
+            ->map(fn ($w) => new ProductListResource($w->product));
 
         // Addresses
         $addresses = UserAddress::where('user_id', $user->id)
@@ -97,28 +91,18 @@ class AccountController extends Controller
         return back()->with('success', $inWishlist ? 'Added to favourites.' : 'Removed from favourites.');
     }
 
-    public function storeAddress(Request $request)
+    public function storeAddress(AddressRequest $request)
     {
-        $data = $request->validate([
-            'name'    => 'required|string|max:255',
-            'phone'   => 'nullable|string|max:30',
-            'address' => 'required|string|max:500',
-            'city'    => 'required|string|max:100',
-            'state'   => 'nullable|string|max:100',
-            'country' => 'required|string|max:100',
-            'zip'     => 'nullable|string|max:20',
-            'is_default' => 'boolean',
-        ]);
-
+        $data = $request->validated();
         $user = Auth::user();
         $data['user_id'] = $user->id;
 
-        if (!empty($data['is_default'])) {
+        if (! empty($data['is_default'])) {
             UserAddress::where('user_id', $user->id)->update(['is_default' => false]);
         }
 
         // If first address, make it default automatically
-        if (UserAddress::where('user_id', $user->id)->count() === 0) {
+        if (UserAddress::where('user_id', $user->id)->doesntExist()) {
             $data['is_default'] = true;
         }
 
@@ -127,22 +111,13 @@ class AccountController extends Controller
         return back()->with('success', 'Address saved.');
     }
 
-    public function updateAddress(Request $request, UserAddress $address)
+    public function updateAddress(AddressRequest $request, UserAddress $address)
     {
         abort_if($address->user_id !== Auth::id(), 403);
 
-        $data = $request->validate([
-            'name'       => 'required|string|max:255',
-            'phone'      => 'nullable|string|max:30',
-            'address'    => 'required|string|max:500',
-            'city'       => 'required|string|max:100',
-            'state'      => 'nullable|string|max:100',
-            'country'    => 'required|string|max:100',
-            'zip'        => 'nullable|string|max:20',
-            'is_default' => 'boolean',
-        ]);
+        $data = $request->validated();
 
-        if (!empty($data['is_default'])) {
+        if (! empty($data['is_default'])) {
             UserAddress::where('user_id', Auth::id())->update(['is_default' => false]);
         }
 

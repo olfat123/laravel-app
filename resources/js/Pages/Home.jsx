@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import ProductItem from '@/Components/App/ProductItem';
+import SectionHeader from '@/Components/App/SectionHeader';
 import { useTrans, useLocale } from '@/i18n';
 
 const DEPT_COLORS = [
@@ -89,18 +90,12 @@ export default function Home({ departments, featuredProducts, mostSellingProduct
             {featuredProducts?.data?.length > 0 && (
                 <section className="py-20 bg-base-200">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-end justify-between mb-12">
-                            <div>
-                                <h2 className="text-3xl md:text-4xl font-bold text-base-content">{t('home.featured.heading')}</h2>
-                                <p className="mt-3 text-base-content/60">{t('home.featured.subtext')}</p>
-                            </div>
-                            <Link href={route('shop')} className="btn btn-ghost gap-1 hidden sm:flex">
-                                {t('home.featured.view_all')}
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </Link>
-                        </div>
+                        <SectionHeader
+                            heading={t('home.featured.heading')}
+                            subtext={t('home.featured.subtext')}
+                            viewAllHref={route('shop')}
+                            viewAllLabel={t('home.featured.view_all')}
+                        />
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                             {featuredProducts.data.map((product) => (
                                 <ProductItem product={product} key={product.id} />
@@ -117,18 +112,12 @@ export default function Home({ departments, featuredProducts, mostSellingProduct
             {mostSellingProducts?.data?.length > 0 && (
                 <section className="py-20 bg-base-100">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-end justify-between mb-12">
-                            <div>
-                                <h2 className="text-3xl md:text-4xl font-bold text-base-content">{t('home.best_sellers.heading')}</h2>
-                                <p className="mt-3 text-base-content/60">{t('home.best_sellers.subtext')}</p>
-                            </div>
-                            <Link href={route('shop')} className="btn btn-ghost gap-1 hidden sm:flex">
-                                {t('home.featured.view_all')}
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </Link>
-                        </div>
+                        <SectionHeader
+                            heading={t('home.best_sellers.heading')}
+                            subtext={t('home.best_sellers.subtext')}
+                            viewAllHref={route('shop')}
+                            viewAllLabel={t('home.featured.view_all')}
+                        />
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                             {mostSellingProducts.data.map((product) => (
                                 <ProductItem product={product} key={product.id} />
@@ -142,12 +131,10 @@ export default function Home({ departments, featuredProducts, mostSellingProduct
             {latestViewedProducts?.data?.length > 0 && (
                 <section className="py-20 bg-base-200">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-end justify-between mb-12">
-                            <div>
-                                <h2 className="text-3xl md:text-4xl font-bold text-base-content">{t('home.recently_viewed.heading')}</h2>
-                                <p className="mt-3 text-base-content/60">{t('home.recently_viewed.subtext')}</p>
-                            </div>
-                        </div>
+                        <SectionHeader
+                            heading={t('home.recently_viewed.heading')}
+                            subtext={t('home.recently_viewed.subtext')}
+                        />
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                             {latestViewedProducts.data.map((product) => (
                                 <ProductItem product={product} key={product.id} />
@@ -161,18 +148,12 @@ export default function Home({ departments, featuredProducts, mostSellingProduct
             {latestPosts?.data?.length > 0 && (
                 <section className="py-20 bg-base-100">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-end justify-between mb-12">
-                            <div>
-                                <h2 className="text-3xl md:text-4xl font-bold text-base-content">{t('home.blog.heading')}</h2>
-                                <p className="mt-3 text-base-content/60">{t('home.blog.subtext')}</p>
-                            </div>
-                            <Link href={route('blog.index')} className="btn btn-ghost gap-1 hidden sm:flex">
-                                {t('home.blog.view_all')}
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </Link>
-                        </div>
+                        <SectionHeader
+                            heading={t('home.blog.heading')}
+                            subtext={t('home.blog.subtext')}
+                            viewAllHref={route('blog.index')}
+                            viewAllLabel={t('home.blog.view_all')}
+                        />
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             {latestPosts.data.map(post => {
                                 const title   = locale === 'ar' && post.title_ar   ? post.title_ar   : post.title;

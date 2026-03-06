@@ -2,37 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use App\Models\Coupon;
 use App\Models\Product;
-use App\Models\Setting;
 use Illuminate\Http\Request;
 use App\Services\CartService;
-use App\Enums\OrderStatusEnum;
-use Illuminate\Support\Facades\DB;
+use App\Services\OrderService;
 
 class CartController extends Controller
 {
-    private function sanitizeImageUrl(?string $url): ?string
-    {
-        if (!$url) {
-            return null;
-        }
-
-        $parts = parse_url($url);
-        if (!$parts || empty($parts['scheme']) || empty($parts['host'])) {
-            return null;
-        }
-
-        $path = $parts['path'] ?? '';
-        $encodedPath = implode('/', array_map('rawurlencode', explode('/', $path)));
-        $port = isset($parts['port']) ? ':' . $parts['port'] : '';
-        $query = isset($parts['query']) ? '?' . $parts['query'] : '';
-        $fragment = isset($parts['fragment']) ? '#' . rawurlencode($parts['fragment']) : '';
-
-        return $parts['scheme'] . '://' . $parts['host'] . $port . $encodedPath . $query . $fragment;
-    }
-
     /**
      * Display the cart listing.
      */
@@ -140,10 +116,10 @@ class CartController extends Controller
     }
 
     /**
-     * Place orders — creates orders then handles payment method routing.
+     * Place orders — delegates all business logic to OrderService.
      * payment_method: 'cod' (cash on delivery) or 'paymob_cc' (Paymob credit card)
      */
-    public function placeOrder(Request $request, CartService $cartService)
+    public function placeOrder(Request $request, CartService $cartService, OrderService $orderService)
     {
         $data = $request->validate([
             'shipping_name'    => ['required', 'string', 'max:255'],
@@ -158,130 +134,24 @@ class CartController extends Controller
             'coupon_code'      => ['nullable', 'string'],
         ]);
 
-        $coupon = null;
-        if (!empty($data['coupon_code'])) {
-            $coupon = Coupon::where('code', strtoupper(trim($data['coupon_code'])))->first();
-            if (!$coupon) {
-                return back()->withErrors(['coupon_code' => 'Invalid coupon code.']);
-            }
-        }
-
-        $vendorId = $data['vendor_id'] ?? null;
-        $allCartItems = $cartService->getCartItemsGrouped();
-
-        $checkoutCartItems = $allCartItems;
-        if ($vendorId) {
-            $checkoutCartItems = isset($allCartItems[$vendorId]) ? [$vendorId => $allCartItems[$vendorId]] : [];
-        }
-
-        if (empty($checkoutCartItems)) {
-            return back()->with('error', 'Your cart is empty.');
-        }
-
-        DB::beginTransaction();
         try {
-            $orders = [];
-            $commissionRate  = (float) Setting::get('website_commission', 0);
-            $taxRate         = (float) Setting::get('tax_rate', 0);
-            $pricesIncludeTax = Setting::get('prices_include_tax', '0') === '1';
-
-            // Compute coupon discount across all checkout items
-            $checkoutTotal    = collect($checkoutCartItems)->sum('total_price');
-            $totalDiscount    = 0;
-            if ($coupon) {
-                $couponError = $coupon->validate((float) $checkoutTotal);
-                if ($couponError) {
-                    return back()->withErrors(['coupon_code' => $couponError]);
-                }
-                $totalDiscount = $coupon->calculateDiscount((float) $checkoutTotal);
-            }
-
-            foreach ($checkoutCartItems as $item) {
-                $user = $item['user'];
-                $cartItems = $item['items'];
-
-                $totalPrice = $item['total_price'];
-
-                // Distribute discount proportionally across vendors
-                $vendorDiscount = $checkoutTotal > 0
-                    ? round($totalDiscount * ($totalPrice / $checkoutTotal), 4)
-                    : 0;
-                $discountedTotal   = max(0, $totalPrice - $vendorDiscount);
-
-                // Calculate tax
-                if ($taxRate > 0) {
-                    if ($pricesIncludeTax) {
-                        // Extract tax from inclusive price
-                        $taxAmount = round($discountedTotal - $discountedTotal / (1 + $taxRate / 100), 4);
-                    } else {
-                        // Add tax on top
-                        $taxAmount = round($discountedTotal * $taxRate / 100, 4);
-                        $discountedTotal = round($discountedTotal + $taxAmount, 4);
-                    }
-                } else {
-                    $taxAmount = 0;
-                }
-
-                $websiteCommission = round($discountedTotal * $commissionRate / 100, 4);
-                $vendorSubtotal    = round($discountedTotal - $websiteCommission, 4);
-
-                $order = Order::create([
-                    'user_id'            => auth()->id(),
-                    'vendor_user_id'     => $user['id'],
-                    'total_price'        => $discountedTotal,
-                    'discount_amount'    => $vendorDiscount,
-                    'tax_rate'           => $taxRate,
-                    'tax_amount'         => $taxAmount,
-                    'coupon_code'        => $coupon ? $coupon->code : null,
-                    'website_commission' => $websiteCommission,
-                    'vendor_subtotal'    => $vendorSubtotal,
-                    'status'             => OrderStatusEnum::Pending->value,
-                    'payment_method'     => $data['payment_method'],
-                    'shipping_name'      => $data['shipping_name'],
-                    'shipping_phone'     => $data['shipping_phone'],
-                    'shipping_address'   => $data['shipping_address'],
-                    'shipping_city'      => $data['shipping_city'],
-                    'shipping_state'     => $data['shipping_state'] ?? null,
-                    'shipping_country'   => $data['shipping_country'],
-                    'shipping_zip'       => $data['shipping_zip'] ?? null,
-                ]);
-
-                $orders[] = $order;
-
-                foreach ($cartItems as $cartItem) {
-                    $order->items()->create([
-                        'product_id'                => $cartItem['product_id'],
-                        'quantity'                  => $cartItem['quantity'],
-                        'price'                     => $cartItem['price'],
-                        'variation_type_option_ids' => $cartItem['option_ids'] ?? null,
-                    ]);
-                }
-            }
-
-            // Increment coupon usage once all orders are created
-            if ($coupon) {
-                $coupon->incrementUsage();
-            }
-
-            DB::commit();
-
-            // Cash on delivery — clear cart and go to success
-            if ($data['payment_method'] === 'cod') {
-                $cartService->clearCart();
-                return inertia('Checkout/Success', [
-                    'message' => 'Order placed successfully! We will contact you to confirm delivery.',
-                ]);
-            }
-
-            // Paymob CC — store order IDs in session and redirect to Paymob
-            $orderIds = collect($orders)->pluck('id')->toArray();
-            session(['paymob_order_ids' => $orderIds]);
-
-            return redirect()->route('paymob.pay');
-        } catch (\Exception $e) {
-            DB::rollBack();
+            $orders = $orderService->placeOrders($data, $data['vendor_id'] ?? null);
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['coupon_code' => $e->getMessage()]);
+        } catch (\Throwable $e) {
             return back()->with('error', $e->getMessage() ?: 'Something went wrong. Please try again.');
         }
+
+        if ($data['payment_method'] === 'cod') {
+            $cartService->clearCart();
+            return inertia('Checkout/Success', [
+                'message' => 'Order placed successfully! We will contact you to confirm delivery.',
+            ]);
+        }
+
+        session(['paymob_order_ids' => collect($orders)->pluck('id')->toArray()]);
+
+        return redirect()->route('paymob.pay');
     }
 }
 

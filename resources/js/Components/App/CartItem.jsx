@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import CurrencyFormatter from "@/Components/CurrencyFormatter";
 import { Link, router } from "@inertiajs/react";
 import { productRoute } from '@/Helper';

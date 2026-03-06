@@ -30,15 +30,13 @@ class ProductResource extends JsonResource
             'description' => $this->description,
             'description_ar' => $this->description_ar,
             'image' => $this->getFirstMediaUrl('images', 'small') ?: null,
-            'images' => $this->getMedia('images')->map(function ($media) {
-                return [
-                    'id' => $media->id,
-                    'small' => $media->getUrl('small'),
-                    'large' => $media->getUrl('large'),
-                    'thumb' => $media->getUrl('thumb'),
-                    'original_url' => $media->getUrl(),
-                ];
-            }),
+            'images' => $this->getMedia('images')->map(fn ($media) => [
+                'id'           => $media->id,
+                'small'        => $media->getUrl('small'),
+                'large'        => $media->getUrl('large'),
+                'thumb'        => $media->getUrl('thumb'),
+                'original_url' => $media->getUrl(),
+            ]),
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
@@ -51,44 +49,35 @@ class ProductResource extends JsonResource
                 'id' => $this->category->id,
                 'name' => $this->category->name,
             ],
-            'variationTypes' => $this->variationTypes->map(function ($variationType) {
-                return [
-                    'id'   => $variationType->id,
-                    'name' => $variationType->name,
-                    'name_ar' => $variationType->name_ar,
-                    'type' => $variationType->type,
-                    'options' => $variationType->options->map(function ($option) {
-                        return [
-                            'id'      => $option->id,
-                            'name'    => $option->name,
-                            'name_ar' => $option->name_ar,
-                            'images' => $option->getMedia('images')->map(function ($media) {
-                                return [
-                                    'id' => $media->id,
-                                    'small' => $media->getUrl('small'),
-                                    'large' => $media->getUrl('large'),
-                                    'thumb' => $media->getUrl('thumb'),
-                                    'original_url' => $media->getUrl(),
-                                ];
-                            }),
-                        ];
-                    }),
-                ];
-            }),
-            'variations' => $this->variations->map(function ($variation) {
-                return [
-                    'id' => $variation->id,
-                    'variation_type_option_ids' => $variation->variation_type_option_ids,
-                    'price' => $variation->price,
-                    'sale_price' => $variation->sale_price,
-                    'sale_start' => $variation->sale_start?->toISOString(),
-                    'sale_end'   => $variation->sale_end?->toISOString(),
-                    'is_on_sale' => $variation->isOnSale(),
-                    'active_price' => $variation->active_price,
-                    'quantity' => $variation->quantity,
-                    // 'is_default' => $variation->is_default,
-                ];
-            }),
+            'variationTypes' => $this->variationTypes->map(fn ($variationType) => [
+                'id'      => $variationType->id,
+                'name'    => $variationType->name,
+                'name_ar' => $variationType->name_ar,
+                'type'    => $variationType->type,
+                'options' => $variationType->options->map(fn ($option) => [
+                    'id'      => $option->id,
+                    'name'    => $option->name,
+                    'name_ar' => $option->name_ar,
+                    'images'  => $option->getMedia('images')->map(fn ($media) => [
+                        'id'           => $media->id,
+                        'small'        => $media->getUrl('small'),
+                        'large'        => $media->getUrl('large'),
+                        'thumb'        => $media->getUrl('thumb'),
+                        'original_url' => $media->getUrl(),
+                    ]),
+                ]),
+            ]),
+            'variations' => $this->variations->map(fn ($variation) => [
+                'id'                        => $variation->id,
+                'variation_type_option_ids' => $variation->variation_type_option_ids,
+                'price'                     => $variation->price,
+                'sale_price'                => $variation->sale_price,
+                'sale_start'                => $variation->sale_start?->toISOString(),
+                'sale_end'                  => $variation->sale_end?->toISOString(),
+                'is_on_sale'                => $variation->isOnSale(),
+                'active_price'              => $variation->active_price,
+                'quantity'                  => $variation->quantity,
+            ]),
         ];    
     }
 }

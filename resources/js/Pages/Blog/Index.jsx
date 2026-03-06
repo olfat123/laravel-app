@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useTrans, useLocale } from '@/i18n';
+import Pagination from '@/Components/App/Pagination';
 
 function PostCard({ post }) {
     const t = useTrans();
@@ -145,22 +146,7 @@ export default function BlogIndex({ posts, categories, activeCategory }) {
                     )}
 
                     {/* Pagination */}
-                    {meta?.last_page > 1 && (
-                        <div className="mt-12 flex justify-center gap-2">
-                            {meta.links?.map((link, i) => (
-                                link.url ? (
-                                    <Link
-                                        key={i}
-                                        href={link.url}
-                                        className={`btn btn-sm ${link.active ? 'btn-primary' : 'btn-ghost'}`}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ) : (
-                                    <span key={i} className="btn btn-sm btn-disabled" dangerouslySetInnerHTML={{ __html: link.label }} />
-                                )
-                            ))}
-                        </div>
-                    )}
+                    <Pagination meta={meta} className="mt-12" />
                 </div>
             </section>
         </AuthenticatedLayout>

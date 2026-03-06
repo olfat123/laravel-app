@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductVariation extends Model
@@ -19,7 +18,7 @@ class ProductVariation extends Model
             return false;
         }
 
-        $now = Carbon::now();
+        $now = now();
 
         if ($this->sale_start && $now->lt($this->sale_start)) {
             return false;

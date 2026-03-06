@@ -10,12 +10,13 @@ use App\Models\VariationTypeOption;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Log;
-use PHPUnit\Event\Runtime\PHP;
 
 class CartService
 {
     private ?array $cachedCartItems = null;
-    protected const COOKIE_NAME = 'cartItems';
+    private ?array $cachedTaxSettings = null;
+
+    protected const COOKIE_NAME     = 'cartItems';
     protected const COOKIE_LIFETIME = 60 * 24 * 365;
 
     public function addItemToCart(Product $product, int $quantity = 1, $optionIds = null)
@@ -128,10 +129,9 @@ class CartService
 
             return $this->cachedCartItems;
         } catch (\Exception $e) {
+            Log::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
             throw $e;
-            Log::error( $e->getMessage() . PHP_EOL . $e->getTraceAsString() );
         }
-        return [];
     }
 
     public function getTotalQuantity(): int
@@ -156,10 +156,11 @@ class CartService
 
     /**
      * Return tax settings: rate (%) and whether prices already include tax.
+     * Results are cached for the lifetime of this request.
      */
     public function getTaxSettings(): array
     {
-        return [
+        return $this->cachedTaxSettings ??= [
             'tax_rate'           => (float) Setting::get('tax_rate', 0),
             'prices_include_tax' => Setting::get('prices_include_tax', '0') === '1',
         ];
@@ -258,21 +259,18 @@ class CartService
             ->where( 'variation_type_option_ids', $optionIds ? json_encode( $optionIds ) : null )
             ->first();
 
-        if ( $cartItem ) {
-            $cartItem->quantity += $quantity;
-            $cartItem->save();
-            return;
-        } else {
-            CartItem::create([
-                'user_id' => $userId,
-                'product_id' => $productId,
-                'variation_type_option_ids' => $optionIds ? json_encode($optionIds) : null,
-                'quantity' => $quantity,
-                'price' => $price,
-            ]);
+        if ($cartItem) {
+            $cartItem->increment('quantity', $quantity);
             return;
         }
 
+        CartItem::create([
+            'user_id'                   => $userId,
+            'product_id'                => $productId,
+            'variation_type_option_ids' => $optionIds ? json_encode($optionIds) : null,
+            'quantity'                  => $quantity,
+            'price'                     => $price,
+        ]);
     }
 
     protected function saveItemToCookies(int $productId, int $quantity, $price, $optionIds = null): void
@@ -339,24 +337,19 @@ class CartService
         }
     }
 
-    protected function getCartItemsFromDatabase()
+    protected function getCartItemsFromDatabase(): array
     {
-        $userId = Auth::id();
-        $cartItems = CartItem::where( 'user_id', $userId )
-                ->get()
-                ->map( function($cartItem) {
-                    return [
-                        'id'         => $cartItem->id,
-                        'product_id' => $cartItem->product_id,
-                        'quantity'   => $cartItem->quantity,
-                        'price'      => $cartItem->price,
-                        'option_ids' => is_string($cartItem->variation_type_option_ids) 
-                            ? json_decode($cartItem->variation_type_option_ids, true) 
-                            : $cartItem->variation_type_option_ids,
-                    ];
-                } )->toArray();
-
-        return $cartItems;
+        // CartItem casts variation_type_option_ids to array automatically
+        return CartItem::where('user_id', Auth::id())
+            ->get()
+            ->map(fn ($cartItem) => [
+                'id'         => $cartItem->id,
+                'product_id' => $cartItem->product_id,
+                'quantity'   => $cartItem->quantity,
+                'price'      => $cartItem->price,
+                'option_ids' => $cartItem->variation_type_option_ids ?? [],
+            ])
+            ->toArray();
     }
 
     protected function getCartItemsFromCookies()

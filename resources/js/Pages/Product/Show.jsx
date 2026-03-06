@@ -1,48 +1,20 @@
-import React from 'react';
-import { useState } from 'react';
-import { useForm, usePage } from '@inertiajs/react';
-import { useMemo } from 'react';
-import { useEffect } from 'react';
-import { router } from '@inertiajs/react';
+import { useState, useMemo, useEffect } from 'react';
+import { useForm, usePage, router } from '@inertiajs/react';
 import isEqual from 'lodash/isEqual';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import CurrencyFormatter from '@/Components/CurrencyFormatter';
 import Carousel from '@/Components/Carousel';
 import ProductItem from '@/Components/App/ProductItem';
+import StarRating from '@/Components/App/StarRating';
 import { Head, Link } from '@inertiajs/react';
 import { useTrans, useLocale } from '@/i18n';
-
-function StarRating({ value, onChange, readonly = false }) {
-    const [hovered, setHovered] = useState(0);
-    return (
-        <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                    key={star}
-                    type="button"
-                    disabled={readonly}
-                    onClick={() => !readonly && onChange && onChange(star)}
-                    onMouseEnter={() => !readonly && setHovered(star)}
-                    onMouseLeave={() => !readonly && setHovered(0)}
-                    className={`text-2xl transition-colors ${
-                        (hovered || value) >= star
-                            ? 'text-yellow-400'
-                            : 'text-base-content/20'
-                    } ${!readonly ? 'cursor-pointer hover:scale-110' : 'cursor-default'}`}
-                >
-                    ★
-                </button>
-            ))}
-        </div>
-    );
-}
 
 export default function Show({ product, variationOptions, relatedProducts, reviews = [], canReview = false, userReview = null }) {
     const form = useForm({
         product_id: product.id,
         option_ids: Object.values(variationOptions || {}),
         quantity: 1,
-        price: product.price | null
+        price: product.price ?? null
     });
 
     const reviewForm = useForm({ rating: 0, body: '' });
@@ -76,10 +48,7 @@ export default function Show({ product, variationOptions, relatedProducts, revie
         return product.images;
     }, [product,selectedOptions]);
 
-    const arrayAreEquals = (arr1, arr2) => {
-        if (arr1.length !== arr2.length) return false;
-        return arr1.every((val, i) => val === arr2[i]);
-    }
+    const arrayAreEquals = (arr1, arr2) => isEqual([...arr1].sort(), [...arr2].sort());
     const computedProduct = useMemo(() => {
         const selectedOptionIds = Object.values
             (selectedOptions)

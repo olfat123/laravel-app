@@ -28,7 +28,7 @@ class ProductController extends Controller
 
         $featuredProducts = Product::query()
             ->forWebsite()
-            ->where('is_featured', true)
+            ->featured()
             ->withCount('variationTypes')
             ->with(['department', 'category', 'user.vendor'])
             ->latest()
@@ -44,41 +44,12 @@ class ProductController extends Controller
             ->take(8)
             ->get();
 
-        $latestViewedProducts = collect();
-        if (auth()->check()) {
-            $viewedProductIds = ProductView::where('user_id', auth()->id())
-                ->latest('viewed_at')
-                ->take(8)
-                ->pluck('product_id');
-
-            if ($viewedProductIds->isNotEmpty()) {
-                $latestViewedProducts = Product::query()
-                    ->forWebsite()
-                    ->withCount('variationTypes')
-                    ->with(['department', 'category', 'user.vendor'])
-                    ->whereIn('id', $viewedProductIds)
-                    ->orderByRaw('FIELD(id, ' . $viewedProductIds->implode(',') . ')')
-                    ->get();
-            }
-        } else {
-            $sessionViewedIds = session('viewed_product_ids', []);
-            if (!empty($sessionViewedIds)) {
-                $latestViewedProducts = Product::query()
-                    ->forWebsite()
-                    ->withCount('variationTypes')
-                    ->with(['department', 'category', 'user.vendor'])
-                    ->whereIn('id', $sessionViewedIds)
-                    ->take(8)
-                    ->get();
-            }
-        }
-
         return Inertia::render('Home', [
-            'departments'           => $departments,
-            'featuredProducts'      => ProductListResource::collection($featuredProducts),
-            'mostSellingProducts'   => ProductListResource::collection($mostSellingProducts),
-            'latestViewedProducts'  => ProductListResource::collection($latestViewedProducts),
-            'latestPosts'           => PostListResource::collection(
+            'departments'          => $departments,
+            'featuredProducts'     => ProductListResource::collection($featuredProducts),
+            'mostSellingProducts'  => ProductListResource::collection($mostSellingProducts),
+            'latestViewedProducts' => ProductListResource::collection($this->getRecentlyViewedProducts()),
+            'latestPosts'          => PostListResource::collection(
                 Post::published()->with(['author', 'category'])->latest('published_at')->take(3)->get()
             ),
         ]);
@@ -122,19 +93,7 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        // Track the view
-        if (auth()->check()) {
-            ProductView::updateOrCreate(
-                ['product_id' => $product->id, 'user_id' => auth()->id()],
-                ['viewed_at' => now()]
-            );
-        } else {
-            $sessionKey = 'viewed_product_ids';
-            $viewedIds = session($sessionKey, []);
-            $viewedIds = array_values(array_diff($viewedIds, [$product->id]));
-            array_unshift($viewedIds, $product->id);
-            session([$sessionKey => array_slice($viewedIds, 0, 20)]);
-        }
+        $this->trackProductView($product);
 
         $relatedProducts = Product::query()
             ->forWebsite()
@@ -146,39 +105,114 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
+        $reviews = $product->reviews()
+            ->where('is_approved', true)
+            ->with('user:id,name')
+            ->latest()
+            ->get()
+            ->map(fn ($r) => [
+                'id'         => $r->id,
+                'rating'     => $r->rating,
+                'body'       => $r->body,
+                'created_at' => $r->created_at->toISOString(),
+                'user'       => ['id' => $r->user->id, 'name' => $r->user->name],
+            ]);
+
         return Inertia::render('Product/Show', [
             'product'          => new ProductResource($product),
             'variationOptions' => request('options', []),
             'relatedProducts'  => ProductListResource::collection($relatedProducts),
-            'reviews'          => $product->reviews()
-                ->where('is_approved', true)
-                ->with('user:id,name')
-                ->latest()
-                ->get()
-                ->map(fn ($r) => [
-                    'id'         => $r->id,
-                    'rating'     => $r->rating,
-                    'body'       => $r->body,
-                    'created_at' => $r->created_at->toISOString(),
-                    'user'       => ['id' => $r->user->id, 'name' => $r->user->name],
-                ]),
-            'canReview'        => auth()->check() && OrderItem::where('product_id', $product->id)
-                ->whereHas('order', fn ($q) => $q
-                    ->where('user_id', auth()->id())
-                    ->whereIn('status', [
-                        OrderStatusEnum::Completed->value,
-                        OrderStatusEnum::Delivered->value,
-                    ])
-                )
-                ->exists()
-                && ! ProductReview::where('product_id', $product->id)
-                    ->where('user_id', auth()->id())
-                    ->exists(),
+            'reviews'          => $reviews,
+            'canReview'        => $this->userCanReview($product->id),
             'userReview'       => auth()->check()
                 ? ProductReview::where('product_id', $product->id)
                     ->where('user_id', auth()->id())
                     ->first(['id', 'rating', 'body', 'is_approved', 'created_at'])
                 : null,
         ]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Record a product view for the current visitor (auth user or guest session).
+     */
+    private function trackProductView(Product $product): void
+    {
+        if (auth()->check()) {
+            ProductView::updateOrCreate(
+                ['product_id' => $product->id, 'user_id' => auth()->id()],
+                ['viewed_at' => now()]
+            );
+            return;
+        }
+
+        $viewedIds = session('viewed_product_ids', []);
+        $viewedIds = array_values(array_diff($viewedIds, [$product->id]));
+        array_unshift($viewedIds, $product->id);
+        session(['viewed_product_ids' => array_slice($viewedIds, 0, 20)]);
+    }
+
+    /**
+     * Return recently-viewed products for the current visitor.
+     */
+    private function getRecentlyViewedProducts()
+    {
+        $base = Product::query()
+            ->forWebsite()
+            ->withCount('variationTypes')
+            ->with(['department', 'category', 'user.vendor']);
+
+        if (auth()->check()) {
+            $ids = ProductView::where('user_id', auth()->id())
+                ->latest('viewed_at')
+                ->take(8)
+                ->pluck('product_id');
+
+            if ($ids->isEmpty()) {
+                return collect();
+            }
+
+            return $base->whereIn('id', $ids)
+                ->orderByRaw('FIELD(id, ' . $ids->implode(',') . ')')
+                ->get();
+        }
+
+        $ids = session('viewed_product_ids', []);
+        if (empty($ids)) {
+            return collect();
+        }
+
+        return $base->whereIn('id', $ids)->take(8)->get();
+    }
+
+    /**
+     * Whether the authenticated user is eligible to leave a review for a product.
+     */
+    private function userCanReview(int $productId): bool
+    {
+        if (! auth()->check()) {
+            return false;
+        }
+
+        $userId = auth()->id();
+
+        $hasPurchased = OrderItem::where('product_id', $productId)
+            ->whereHas('order', fn ($q) => $q
+                ->where('user_id', $userId)
+                ->whereIn('status', [
+                    OrderStatusEnum::Completed->value,
+                    OrderStatusEnum::Delivered->value,
+                ])
+            )
+            ->exists();
+
+        if (! $hasPurchased) {
+            return false;
+        }
+
+        return ! ProductReview::where('product_id', $productId)
+            ->where('user_id', $userId)
+            ->exists();
     }
 }

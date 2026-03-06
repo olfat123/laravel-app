@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\ProductStatusEnum;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
@@ -13,13 +12,33 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use App\Models\OrderItem;
-use App\Models\ProductView;
-use App\Models\ProductReview;
 
 class Product extends Model implements HasMedia
 {
     use HasFactory, SoftDeletes, InteractsWithMedia;
+
+    protected $fillable = [
+        'title',
+        'title_ar',
+        'slug',
+        'description',
+        'description_ar',
+        'price',
+        'sale_price',
+        'sale_start',
+        'sale_end',
+        'quantity',
+        'status',
+        'is_featured',
+        'department_id',
+        'category_id',
+        'created_by',
+    ];
+
+    protected $casts = [
+        'sale_start' => 'datetime',
+        'sale_end'   => 'datetime',
+    ];
 
     public function registerMediaConversions(?Media $media = null): void
     {
@@ -46,7 +65,7 @@ class Product extends Model implements HasMedia
         return $this->belongsTo(Department::class);
     }
 
-    public function category()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
@@ -105,7 +124,7 @@ class Product extends Model implements HasMedia
             return false;
         }
 
-        $now = Carbon::now();
+        $now = now();
 
         if ($this->sale_start && $now->lt($this->sale_start)) {
             return false;
@@ -126,30 +145,7 @@ class Product extends Model implements HasMedia
         return $this->isOnSale() ? (float) $this->sale_price : (float) $this->price;
     }
 
-    protected $fillable = [
-        'title',
-        'title_ar',
-        'slug',
-        'description',
-        'description_ar',
-        'price',
-        'sale_price',
-        'sale_start',
-        'sale_end',
-        'quantity',
-        'status',
-        'is_featured',
-        'department_id',
-        'category_id',
-        'created_by',
-    ];
-
-    protected $casts = [
-        'sale_start' => 'datetime',
-        'sale_end'   => 'datetime',
-    ];
-
-    public function getPriceForOptions(array $optionIds)
+    public function getPriceForOptions(array $optionIds): float|int
     {
         $optionIds = array_values($optionIds);
         sort($optionIds);
@@ -157,7 +153,7 @@ class Product extends Model implements HasMedia
             $variationOptionIds = $variation->variation_type_option_ids ?? [];
             sort($variationOptionIds);
             if ($variationOptionIds === $optionIds) {
-                return $variation->price !== null ? $variation->price : $this->price;
+                return $variation->price ?? $this->price;
             }
         }
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { usePage } from '@inertiajs/react';
 
 export default function CurrencyFormatter({ amount, currency, locale }) {
@@ -12,5 +11,5 @@ export default function CurrencyFormatter({ amount, currency, locale }) {
         currency: resolvedCurrency,
     }).format(amount);
 
-    return <span className="text-l font-semibold">{formattedAmount}</span>;
+    return <span className="font-semibold">{formattedAmount}</span>;
 }

@@ -3,17 +3,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import ProductItem from '@/Components/App/ProductItem';
 import ProductFilterPanel from '@/Components/App/ProductFilterPanel';
+import Pagination from '@/Components/App/Pagination';
 import { AdjustmentsHorizontalIcon, MapPinIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useTrans } from '@/i18n';
-
-function useDebounce(value, delay = 400) {
-    const [debounced, setDebounced] = useState(value);
-    useEffect(() => {
-        const t = setTimeout(() => setDebounced(value), delay);
-        return () => clearTimeout(t);
-    }, [value, delay]);
-    return debounced;
-}
+import { useDebounce } from '@/hooks/useDebounce';
 
 export default function StoreShow({ vendor, products, departments = [], filters }) {
     const f = (filters && !Array.isArray(filters)) ? filters : {};
@@ -215,18 +208,7 @@ export default function StoreShow({ vendor, products, departments = [], filters 
                     )}
 
                     {/* Pagination */}
-                    {products.meta && products.meta.last_page > 1 && (
-                        <div className="mt-10 flex justify-center gap-2 flex-wrap">
-                            {products.meta.links.map((link, i) => (
-                                <Link
-                                    key={i}
-                                    href={link.url ?? '#'}
-                                    className={`btn btn-sm ${link.active ? 'btn-primary' : 'btn-ghost'} ${!link.url ? 'btn-disabled opacity-40' : ''}`}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
-                            ))}
-                        </div>
-                    )}
+                    <Pagination meta={products.meta} />
                 </div>
             </div>
         </AuthenticatedLayout>
