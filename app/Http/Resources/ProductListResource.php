@@ -41,7 +41,9 @@ class ProductListResource extends JsonResource
             'category' => [
                 'id' => $this->category->id,
                 'name' => $this->category->name,
-            ]
+            ],
+            'avg_rating'   => round((float) ($this->reviews_avg_rating ?? 0), 1),
+            'review_count' => (int) ($this->reviews_count ?? 0),
         ];
     }
 }

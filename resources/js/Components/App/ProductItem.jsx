@@ -76,6 +76,22 @@ export default function ProductItem({ product }) {
                 <p>
                     {t('product_item.in')} <Link href="/" className="hover:underline">{product.department.name}</Link>
                 </p>
+
+                {/* Star rating */}
+                {product.avg_rating > 0 && (
+                    <div className="flex items-center gap-1 mt-1">
+                        <span className="text-warning text-sm leading-none">
+                            {Array.from({ length: 5 }, (_, i) => (
+                                i < Math.round(product.avg_rating) ? '★' : '☆'
+                            )).join('')}
+                        </span>
+                        <span className="text-xs text-base-content/50">
+                            {product.avg_rating.toFixed(1)}
+                            {product.review_count > 0 && ` (${product.review_count})`}
+                        </span>
+                    </div>
+                )}
+
                 <div className="card-actions justify-between items-center mt-3">
                     {hasVariations ? (
                         <Link href={productRoute(product, 'show')} className="btn btn-primary">
@@ -93,14 +109,14 @@ export default function ProductItem({ product }) {
                     {product.is_on_sale ? (
                         <div className="flex items-center gap-2">
                             <span className="text-error font-semibold">
-                                <CurrencyFormatter amount={product.sale_price} currency="USD" />
+                                <CurrencyFormatter amount={product.sale_price} />
                             </span>
                             <span className="text-sm line-through text-gray-400">
-                                <CurrencyFormatter amount={product.price} currency="USD" />
+                                <CurrencyFormatter amount={product.price} />
                             </span>
                         </div>
                     ) : (
-                        <CurrencyFormatter amount={product.price} currency="USD" />
+                        <CurrencyFormatter amount={product.price} />
                     )}
                 </div>
             </div>

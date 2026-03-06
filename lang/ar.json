@@ -78,6 +78,7 @@
     "shop.sort.price_desc": "السعر: من الأعلى",
     "shop.sort.name_asc": "الاسم: أ → ي",
     "shop.sort.name_desc": "الاسم: ي → أ",
+    "shop.sort.top_rated": "الأعلى تقييمًا",
     "shop.filters_btn": "الفلاتر",
     "shop.filters_heading": "الفلاتر",
     "shop.filters_active_badge": "{count} نشط",

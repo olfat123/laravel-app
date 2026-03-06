@@ -25,6 +25,7 @@ export default function StoreShow({ vendor, products, departments = [], filters 
         { value: 'price_desc', label: t('shop.sort.price_desc') },
         { value: 'name_asc',   label: t('shop.sort.name_asc') },
         { value: 'name_desc',  label: t('shop.sort.name_desc') },
+        { value: 'top_rated',  label: t('shop.sort.top_rated') },
     ];
 
     const [search, setSearch]             = useState(f.search        ?? '');

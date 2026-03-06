@@ -38,16 +38,24 @@ class HandleInertiaRequests extends Middleware
         // Load site settings (cached per-process, cleared on save)
         $siteSettings = Cache::rememberForever('site_settings', function () {
             $rows = Setting::whereIn('key', [
-                'currency', 'currency_locale', 'enabled_languages', 'default_language',
+                'currency', 'enabled_languages', 'default_language',
             ])->pluck('value', 'key');
 
             return [
-                'currency'           => $rows->get('currency', 'USD'),
-                'currency_locale'    => $rows->get('currency_locale', 'en-US'),
-                'available_locales'  => json_decode($rows->get('enabled_languages', '["en","ar"]'), true) ?: ['en'],
-                'default_language'   => $rows->get('default_language', 'en'),
+                'currency'          => $rows->get('currency', 'USD'),
+                'available_locales' => json_decode($rows->get('enabled_languages', '["en","ar"]'), true) ?: ['en'],
+                'default_language'  => $rows->get('default_language', 'en'),
             ];
         });
+
+        // Currency number-formatting locale is always derived from the active UI language.
+        $localeToCurrencyLocale = [
+            'en' => 'en-US',
+            'ar' => 'ar-EG',
+            'fr' => 'fr-FR',
+            'de' => 'de-DE',
+            'tr' => 'tr-TR',
+        ];
 
         $availableLocales = $siteSettings['available_locales'];
         $defaultLocale    = $siteSettings['default_language'];
@@ -92,7 +100,7 @@ class HandleInertiaRequests extends Middleware
             'locale'           => $locale,
             'translations'     => $translations,
             'currency'         => $siteSettings['currency'],
-            'currencyLocale'   => $siteSettings['currency_locale'],
+            'currencyLocale'   => $localeToCurrencyLocale[$locale] ?? 'en-US',
             'availableLocales' => $availableLocales,
         ];
     }

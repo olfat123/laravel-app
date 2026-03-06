@@ -56,7 +56,7 @@ function OrdersTab({ orders }) {
                             </div>
                             <div className="flex items-center gap-4">
                                 <span className="text-sm text-base-content/60">{order.created_at}</span>
-                                <CurrencyFormatter amount={order.total_price} currency="EGP" locale="en-EG" />
+                                <CurrencyFormatter amount={order.total_price} />
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     className={`h-5 w-5 transition-transform ${expanded === order.id ? 'rotate-180' : ''}`}
@@ -117,7 +117,7 @@ function OrdersTab({ orders }) {
                                                 )}
                                                 <span className="text-sm text-base-content/60">{t('account.orders.qty')} {item.quantity}</span>
                                             </div>
-                                            <CurrencyFormatter amount={item.price * item.quantity} currency="EGP" locale="en-EG" />
+                                            <CurrencyFormatter amount={item.price * item.quantity} />
                                         </div>
                                     ))}
                                 </div>
@@ -140,7 +140,7 @@ function OrdersTab({ orders }) {
                                 </span>
                                 <div className="flex items-center gap-2 font-semibold">
                                     <span>{t('account.orders.total')}:</span>
-                                    <CurrencyFormatter amount={order.total_price} currency="EGP" locale="en-EG" />
+                                    <CurrencyFormatter amount={order.total_price} />
                                 </div>
                             </div>
 

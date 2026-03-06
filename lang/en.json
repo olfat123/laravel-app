@@ -78,6 +78,7 @@
     "shop.sort.price_desc": "Price: High → Low",
     "shop.sort.name_asc": "Name: A → Z",
     "shop.sort.name_desc": "Name: Z → A",
+    "shop.sort.top_rated": "Top Rated",
     "shop.filters_btn": "Filters",
     "shop.filters_heading": "Filters",
     "shop.filters_active_badge": "{count} active",

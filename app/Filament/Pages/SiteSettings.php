@@ -6,6 +6,7 @@ use App\Enums\RolesEnum;
 use App\Models\Order;
 use App\Models\Setting;
 use Filament\Forms;
+use Filament\Forms\Get;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
@@ -36,10 +37,9 @@ class SiteSettings extends Page implements HasForms
             'website_commission'  => (float) Setting::get('website_commission', 0),
             'tax_rate'            => (float) Setting::get('tax_rate', 0),
             'prices_include_tax'  => (bool) (Setting::get('prices_include_tax', '0') === '1'),
-            'currency'            => Setting::get('currency', 'USD'),
-            'currency_locale'     => Setting::get('currency_locale', 'en-US'),
-            'enabled_languages'   => json_decode(Setting::get('enabled_languages', '["en","ar"]'), true),
-            'default_language'    => Setting::get('default_language', 'en'),
+            'currency'          => Setting::get('currency', 'USD'),
+            'enabled_languages' => json_decode(Setting::get('enabled_languages', '["en","ar"]'), true),
+            'default_language'  => Setting::get('default_language', 'en'),
         ]);
     }
 
@@ -103,23 +103,8 @@ class SiteSettings extends Page implements HasForms
                                 'AUD' => 'AUD — Australian Dollar',
                             ])
                             ->helperText('The ISO 4217 currency code used for all prices.'),
-
-                        Forms\Components\Select::make('currency_locale')
-                            ->label('Number Formatting Locale')
-                            ->required()
-                            ->searchable()
-                            ->options([
-                                'en-US' => 'en-US — English (US)   e.g. $1,234.50',
-                                'en-GB' => 'en-GB — English (UK)   e.g. £1,234.50',
-                                'ar-EG' => 'ar-EG — Arabic (Egypt) e.g. ١٬٢٣٤٫٥٠',
-                                'ar-SA' => 'ar-SA — Arabic (Saudi) e.g. ١٬٢٣٤٫٥٠',
-                                'fr-FR' => 'fr-FR — French         e.g. 1 234,50 €',
-                                'de-DE' => 'de-DE — German         e.g. 1.234,50 €',
-                                'tr-TR' => 'tr-TR — Turkish        e.g. 1.234,50 ₺',
-                            ])
-                            ->helperText('Controls digit grouping and decimal style shown to users.'),
                     ])
-                    ->columns(2),
+                    ->columns(1),
 
                 Forms\Components\Section::make('Languages')
                     ->description('Choose which languages are available on the frontend and which is the default.')
@@ -132,7 +117,8 @@ class SiteSettings extends Page implements HasForms
                             ])
                             ->required()
                             ->minItems(1)
-                            ->helperText('At least one language must be enabled.'),
+                            ->live()
+                            ->helperText('At least one language must be enabled. Selecting only one makes it the default automatically.'),
 
                         Forms\Components\Select::make('default_language')
                             ->label('Default Language')
@@ -141,6 +127,7 @@ class SiteSettings extends Page implements HasForms
                                 'en' => 'English',
                                 'ar' => 'Arabic',
                             ])
+                            ->hidden(fn (Get $get): bool => count((array) $get('enabled_languages')) < 2)
                             ->helperText('Applied to new visitors who have not yet set a preference.'),
                     ])
                     ->columns(2),
@@ -155,10 +142,12 @@ class SiteSettings extends Page implements HasForms
         Setting::set('website_commission', $data['website_commission']);
         Setting::set('tax_rate',            $data['tax_rate']);
         Setting::set('prices_include_tax',  $data['prices_include_tax'] ? '1' : '0');
-        Setting::set('currency',            $data['currency']);
-        Setting::set('currency_locale',     $data['currency_locale']);
-        Setting::set('enabled_languages',   json_encode($data['enabled_languages']));
-        Setting::set('default_language',    $data['default_language']);
+        Setting::set('currency',          $data['currency']);
+        $enabledLangs = array_values((array) $data['enabled_languages']);
+        Setting::set('enabled_languages', json_encode($enabledLangs));
+        // If only one language is enabled it becomes the default automatically.
+        $defaultLang = count($enabledLangs) === 1 ? $enabledLangs[0] : $data['default_language'];
+        Setting::set('default_language',  $defaultLang);
 
         Cache::forget('site_settings');
 

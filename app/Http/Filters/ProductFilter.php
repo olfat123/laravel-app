@@ -14,6 +14,10 @@ class ProductFilter
      */
     public function apply(Builder $query): Builder
     {
+        // Always load the rating aggregates so ProductListResource can expose them
+        $query->withAvg(['reviews' => fn($q) => $q->where('is_approved', true)], 'rating')
+              ->withCount(['reviews' => fn($q) => $q->where('is_approved', true)]);
+
         $this->search($query)
              ->byDepartment($query)
              ->byCategory($query)
@@ -80,6 +84,11 @@ class ProductFilter
             'price_desc' => $query->orderBy('price', 'desc'),
             'name_asc'   => $query->orderBy('title', 'asc'),
             'name_desc'  => $query->orderBy('title', 'desc'),
+            'top_rated'  => $query->orderByRaw(
+                '(SELECT COALESCE(AVG(rating), 0) FROM product_reviews
+                  WHERE product_reviews.product_id = products.id
+                    AND product_reviews.is_approved = 1) DESC'
+            ),
             default      => $query->latest(),
         };
 

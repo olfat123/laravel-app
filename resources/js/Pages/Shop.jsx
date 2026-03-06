@@ -27,6 +27,7 @@ export default function Shop({ products, departments = [], stores = [], filters 
         { value: 'price_desc', label: t('shop.sort.price_desc') },
         { value: 'name_asc',   label: t('shop.sort.name_asc') },
         { value: 'name_desc',  label: t('shop.sort.name_desc') },
+        { value: 'top_rated',  label: t('shop.sort.top_rated') },
     ];
     const [search, setSearch]             = useState(f.search        ?? '');
     const [departmentId, setDepartmentId] = useState(f.department_id ?? '');
