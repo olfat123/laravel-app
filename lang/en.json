@@ -404,5 +404,22 @@
     "home.best_sellers.subtext": "Our most popular products",
 
     "home.recently_viewed.heading": "Recently Viewed",
-    "home.recently_viewed.subtext": "Continue where you left off"
+    "home.recently_viewed.subtext": "Continue where you left off",
+
+    "reviews.heading": "Customer Reviews",
+    "reviews.count_label": "reviews",
+    "reviews.write_review": "Write a Review",
+    "reviews.your_rating": "Your Rating",
+    "reviews.comment_label": "Your Review (optional)",
+    "reviews.comment_placeholder": "Share your thoughts about this product...",
+    "reviews.submit_btn": "Submit Review",
+    "reviews.submitting": "Submitting...",
+    "reviews.no_reviews": "No reviews yet. Be the first to review this product!",
+    "reviews.your_review": "Your Review",
+    "reviews.pending_approval": "Pending approval — visible to you only until approved.",
+    "reviews.delete": "Delete",
+    "reviews.not_purchased": "You can only review products from a completed or delivered order.",
+    "reviews.already_reviewed": "You have already reviewed this product.",
+    "reviews.submitted": "Your review has been submitted and is pending approval.",
+    "reviews.deleted": "Your review has been deleted."
 }

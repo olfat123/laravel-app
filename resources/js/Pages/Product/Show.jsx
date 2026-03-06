@@ -9,16 +9,57 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import CurrencyFormatter from '@/Components/CurrencyFormatter';
 import Carousel from '@/Components/Carousel';
 import ProductItem from '@/Components/App/ProductItem';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useTrans, useLocale } from '@/i18n';
 
-export default function Show({ product, variationOptions, relatedProducts }) {
+function StarRating({ value, onChange, readonly = false }) {
+    const [hovered, setHovered] = useState(0);
+    return (
+        <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                    key={star}
+                    type="button"
+                    disabled={readonly}
+                    onClick={() => !readonly && onChange && onChange(star)}
+                    onMouseEnter={() => !readonly && setHovered(star)}
+                    onMouseLeave={() => !readonly && setHovered(0)}
+                    className={`text-2xl transition-colors ${
+                        (hovered || value) >= star
+                            ? 'text-yellow-400'
+                            : 'text-base-content/20'
+                    } ${!readonly ? 'cursor-pointer hover:scale-110' : 'cursor-default'}`}
+                >
+                    ★
+                </button>
+            ))}
+        </div>
+    );
+}
+
+export default function Show({ product, variationOptions, relatedProducts, reviews = [], canReview = false, userReview = null }) {
     const form = useForm({
         product_id: product.id,
         option_ids: Object.values(variationOptions || {}),
         quantity: 1,
         price: product.price | null
     });
+
+    const reviewForm = useForm({ rating: 0, body: '' });
+
+    const submitReview = (e) => {
+        e.preventDefault();
+        reviewForm.post(route('product.reviews.store', { product: product.slug }), {
+            preserveScroll: true,
+            onSuccess: () => reviewForm.reset(),
+        });
+    };
+
+    const deleteReview = (reviewId) => {
+        router.delete(route('product.reviews.destroy', { product: product.slug, review: reviewId }), {
+            preserveScroll: true,
+        });
+    };
     const t = useTrans();
     const locale = useLocale();
     const productTitle = (locale === 'ar' && product.title_ar) ? product.title_ar : product.title;
@@ -243,6 +284,117 @@ export default function Show({ product, variationOptions, relatedProducts }) {
                     </div>
                 </div>
             </div>
+
+            {/* ── Reviews ────────────────────────────────────────── */}
+            <section className="py-16 bg-base-100">
+                <div className="container mx-auto px-4 max-w-4xl">
+                    {/* Header + average */}
+                    <div className="flex items-center gap-6 mb-10">
+                        <div>
+                            <h2 className="text-2xl font-bold text-base-content">{t('reviews.heading')}</h2>
+                            {reviews.length > 0 && (
+                                <p className="text-base-content/50 text-sm mt-1">
+                                    {(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)} / 5
+                                    &nbsp;({reviews.length} {t('reviews.count_label')})
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* User's pending review notice */}
+                    {userReview && (
+                        <div className="alert alert-info mb-8 flex justify-between items-center">
+                            <div>
+                                <p className="font-semibold text-sm">{t('reviews.your_review')}</p>
+                                <StarRating value={userReview.rating} readonly />
+                                {userReview.body && <p className="text-sm mt-1 opacity-80">{userReview.body}</p>}
+                                {!userReview.is_approved && (
+                                    <p className="text-xs mt-1 opacity-60">{t('reviews.pending_approval')}</p>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => deleteReview(userReview.id)}
+                                className="btn btn-ghost btn-sm text-error"
+                            >
+                                {t('reviews.delete')}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Review submission form */}
+                    {canReview && (
+                        <div className="card bg-base-200 mb-10">
+                            <div className="card-body">
+                                <h3 className="card-title text-lg">{t('reviews.write_review')}</h3>
+                                <form onSubmit={submitReview} className="space-y-4">
+                                    <div>
+                                        <label className="label"><span className="label-text font-medium">{t('reviews.your_rating')}</span></label>
+                                        <StarRating
+                                            value={reviewForm.data.rating}
+                                            onChange={(v) => reviewForm.setData('rating', v)}
+                                        />
+                                        {reviewForm.errors.rating && (
+                                            <p className="text-error text-sm mt-1">{reviewForm.errors.rating}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="label"><span className="label-text font-medium">{t('reviews.comment_label')}</span></label>
+                                        <textarea
+                                            className="textarea textarea-bordered w-full"
+                                            rows={4}
+                                            placeholder={t('reviews.comment_placeholder')}
+                                            value={reviewForm.data.body}
+                                            onChange={(e) => reviewForm.setData('body', e.target.value)}
+                                        />
+                                        {reviewForm.errors.body && (
+                                            <p className="text-error text-sm mt-1">{reviewForm.errors.body}</p>
+                                        )}
+                                    </div>
+                                    {reviewForm.errors.review && (
+                                        <p className="text-error text-sm">{reviewForm.errors.review}</p>
+                                    )}
+                                    <button
+                                        type="submit"
+                                        disabled={reviewForm.data.rating === 0 || reviewForm.processing}
+                                        className="btn btn-primary"
+                                    >
+                                        {reviewForm.processing ? t('reviews.submitting') : t('reviews.submit_btn')}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Approved reviews list */}
+                    {reviews.length === 0 ? (
+                        <p className="text-base-content/40 text-center py-12">{t('reviews.no_reviews')}</p>
+                    ) : (
+                        <div className="space-y-6">
+                            {reviews.map((review) => (
+                                <div key={review.id} className="card bg-base-200">
+                                    <div className="card-body gap-2">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="font-semibold text-base-content">{review.user.name}</p>
+                                                <p className="text-xs text-base-content/40">
+                                                    {new Date(review.created_at).toLocaleDateString(
+                                                        locale === 'ar' ? 'ar-EG' : 'en-US',
+                                                        { year: 'numeric', month: 'short', day: 'numeric' }
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <StarRating value={review.rating} readonly />
+                                        </div>
+                                        {review.body && (
+                                            <p className="text-base-content/70 text-sm leading-relaxed mt-1">{review.body}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </section>
 
             {/* ── Related Products ───────────────────────────────── */}
             {relatedProducts?.data?.length > 0 && (

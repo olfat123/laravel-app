@@ -13,6 +13,9 @@ use App\Http\Resources\ProductListResource;
 use App\Http\Resources\PostListResource;
 use App\Models\Post;
 use App\Models\ProductView;
+use App\Models\ProductReview;
+use App\Models\OrderItem;
+use App\Enums\OrderStatusEnum;
 
 class ProductController extends Controller
 {
@@ -122,7 +125,7 @@ class ProductController extends Controller
         // Track the view
         if (auth()->check()) {
             ProductView::updateOrCreate(
-                ['product_id' => $product->id, 'user_id' => auth()->id(), 'session_id' => null],
+                ['product_id' => $product->id, 'user_id' => auth()->id()],
                 ['viewed_at' => now()]
             );
         } else {
@@ -147,6 +150,35 @@ class ProductController extends Controller
             'product'          => new ProductResource($product),
             'variationOptions' => request('options', []),
             'relatedProducts'  => ProductListResource::collection($relatedProducts),
+            'reviews'          => $product->reviews()
+                ->where('is_approved', true)
+                ->with('user:id,name')
+                ->latest()
+                ->get()
+                ->map(fn ($r) => [
+                    'id'         => $r->id,
+                    'rating'     => $r->rating,
+                    'body'       => $r->body,
+                    'created_at' => $r->created_at->toISOString(),
+                    'user'       => ['id' => $r->user->id, 'name' => $r->user->name],
+                ]),
+            'canReview'        => auth()->check() && OrderItem::where('product_id', $product->id)
+                ->whereHas('order', fn ($q) => $q
+                    ->where('user_id', auth()->id())
+                    ->whereIn('status', [
+                        OrderStatusEnum::Completed->value,
+                        OrderStatusEnum::Delivered->value,
+                    ])
+                )
+                ->exists()
+                && ! ProductReview::where('product_id', $product->id)
+                    ->where('user_id', auth()->id())
+                    ->exists(),
+            'userReview'       => auth()->check()
+                ? ProductReview::where('product_id', $product->id)
+                    ->where('user_id', auth()->id())
+                    ->first(['id', 'rating', 'body', 'is_approved', 'created_at'])
+                : null,
         ]);
     }
 }

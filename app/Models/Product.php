@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use App\Models\OrderItem;
 use App\Models\ProductView;
+use App\Models\ProductReview;
 
 class Product extends Model implements HasMedia
 {
@@ -68,6 +69,11 @@ class Product extends Model implements HasMedia
     public function views(): HasMany
     {
         return $this->hasMany(ProductView::class, 'product_id');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class, 'product_id');
     }
 
     public function scopeForVendor(Builder $query): Builder

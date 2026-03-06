@@ -10,6 +10,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\ReviewController;
 
 Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
 
@@ -58,6 +59,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/account/addresses/{address}/default', [AccountController::class, 'setDefaultAddress'])->name('account.addresses.default');
     Route::post('/account/orders/{order}/reorder', [AccountController::class, 'reorder'])->name('account.orders.reorder');
     Route::post('/account/orders/{order}/cancel', [AccountController::class, 'cancelOrder'])->name('account.orders.cancel');
+
+    // Product reviews
+    Route::post('/product/{product:slug}/reviews', [ReviewController::class, 'store'])->name('product.reviews.store');
+    Route::delete('/product/{product:slug}/reviews/{review}', [ReviewController::class, 'destroy'])->name('product.reviews.destroy');
 });
 
 // Paymob webhook — excluded from CSRF (configured in bootstrap/app.php)

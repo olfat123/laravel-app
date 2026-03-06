@@ -404,5 +404,22 @@
     "home.best_sellers.subtext": "منتجاتنا الأكثر شعبية",
 
     "home.recently_viewed.heading": "شاهدته مؤخرًا",
-    "home.recently_viewed.subtext": "تابع من حيث توقفت"
+    "home.recently_viewed.subtext": "تابع من حيث توقفت",
+
+    "reviews.heading": "آراء العملاء",
+    "reviews.count_label": "تقييمات",
+    "reviews.write_review": "اكتب تقييمًا",
+    "reviews.your_rating": "تقييمك",
+    "reviews.comment_label": "تعليقك (اختياري)",
+    "reviews.comment_placeholder": "شارك رأيك في هذا المنتج...",
+    "reviews.submit_btn": "إرسال التقييم",
+    "reviews.submitting": "جارٍ الإرسال...",
+    "reviews.no_reviews": "لا توجد تقييمات بعد. كن أول من يقيّم هذا المنتج!",
+    "reviews.your_review": "تقييمك",
+    "reviews.pending_approval": "في انتظار الموافقة — مرئي لك فقط حتى تتم الموافقة.",
+    "reviews.delete": "حذف",
+    "reviews.not_purchased": "يمكنك تقييم المنتجات من الطلبات المكتملة أو المُسلَّمة فقط.",
+    "reviews.already_reviewed": "لقد قيّمت هذا المنتج مسبقًا.",
+    "reviews.submitted": "تم إرسال تقييمك وهو في انتظار الموافقة.",
+    "reviews.deleted": "تم حذف تقييمك."
 }
