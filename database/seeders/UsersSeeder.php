@@ -28,13 +28,13 @@ class UsersSeeder extends Seeder
             'email' => 'vendor@example.com',
         ]);
 
-        $vendor->assignRole(RolesEnum::Vendor->value); 
-        Vendor::factory()->create([
-            'user_id' => $vendor->id,
-            'status' => VendorStatusEnum::APPROVED,
-            'store_name' => 'Vendor Store',
+        $vendor->assignRole(RolesEnum::Vendor->value);
+        Vendor::create([
+            'user_id'       => $vendor->id,
+            'status'        => VendorStatusEnum::APPROVED,
+            'store_name'    => 'Vendor Store',
             'store_address' => '123 Vendor St, City, Country',
-        ]); 
+        ]);
 
         $customer = User::factory()->create([
             'name' => 'Customer',

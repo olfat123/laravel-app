@@ -2,67 +2,48 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
+use App\Models\Category;
 use App\Models\Department;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DepartmentSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        // Clear child tables first to respect FK constraints
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        Category::truncate();
+        Department::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
         $departments = [
             [
-                'name' => 'Electronics',
-                'slug' => Str::slug('Electronics'),
-                'active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'name'             => "Women's Fashion",
+                'slug'             => 'womens-fashion',
+                'meta_title'       => "Women's Fashion – Dresses, Tops, Shoes & More",
+                'meta_description' => "Shop the latest women's clothing, shoes, and accessories.",
+                'active'           => true,
+                'created_at'       => now(),
+                'updated_at'       => now(),
             ],
             [
-                'name' => 'Fasion',
-                'slug' => Str::slug('Fasion'),
-                'active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'name'             => "Men's Fashion",
+                'slug'             => 'mens-fashion',
+                'meta_title'       => "Men's Fashion – Shirts, Pants, Shoes & More",
+                'meta_description' => "Discover modern men's clothing, shoes, and accessories.",
+                'active'           => true,
+                'created_at'       => now(),
+                'updated_at'       => now(),
             ],
             [
-                'name' => 'Home',
-                'slug' => Str::slug('Home'),
-                'active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Health',
-                'slug' => Str::slug('Health'),
-                'active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Sports',
-                'slug' => Str::slug('Sports'),
-                'active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Toys',
-                'slug' => Str::slug('Toys'),
-                'active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Books',
-                'slug' => Str::slug('Books'),
-                'active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'name'             => "Kids' Fashion",
+                'slug'             => 'kids-fashion',
+                'meta_title'       => "Kids' Fashion – Clothes & Shoes for Boys & Girls",
+                'meta_description' => 'Find stylish and comfortable clothing for kids of all ages.',
+                'active'           => true,
+                'created_at'       => now(),
+                'updated_at'       => now(),
             ],
         ];
 

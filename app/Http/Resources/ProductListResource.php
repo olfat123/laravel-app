@@ -29,19 +29,19 @@ class ProductListResource extends JsonResource
             'quantity' => $this->quantity,
             'has_variations' => ($this->variation_types_count ?? 0) > 0,
             'image_url' => $this->getFirstMediaUrl('images', 'small') ?: null,
-            'user' => [
+            'user' => $this->user ? [
                 'id'         => $this->user->id,
                 'name'       => $this->user->name,
                 'store_slug' => $this->user->vendor?->store_slug,
-            ],
-            'department' => [
-                'id' => $this->department->id,
+            ] : null,
+            'department' => $this->department ? [
+                'id'   => $this->department->id,
                 'name' => $this->department->name,
-            ],
-            'category' => [
-                'id' => $this->category->id,
+            ] : null,
+            'category' => $this->category ? [
+                'id'   => $this->category->id,
                 'name' => $this->category->name,
-            ],
+            ] : null,
             'avg_rating'   => round((float) ($this->reviews_avg_rating ?? 0), 1),
             'review_count' => (int) ($this->reviews_count ?? 0),
         ];

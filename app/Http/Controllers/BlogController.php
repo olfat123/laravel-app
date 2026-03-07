@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use App\Models\Post;
 use App\Models\PostCategory;
+use App\Models\Setting;
 use App\Http\Resources\PostListResource;
 use App\Http\Resources\PostResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BlogController extends Controller
 {
@@ -30,10 +32,18 @@ class BlogController extends Controller
             'slug'    => $c->slug,
         ]);
 
+        $blogBgPath = Setting::get('blog_banner_image_url', '');
+        $banner = [
+            'title'     => Setting::get('blog_banner_title', 'Stories, Tips & Style Guides'),
+            'subtitle'  => Setting::get('blog_banner_subtitle', ''),
+            'image_url' => $blogBgPath ? Storage::url($blogBgPath) : '',
+        ];
+
         return Inertia::render('Blog/Index', [
-            'posts'           => PostListResource::collection($posts),
-            'categories'      => $categories,
-            'activeCategory'  => $request->category,
+            'posts'          => PostListResource::collection($posts),
+            'categories'     => $categories,
+            'activeCategory' => $request->category,
+            'banner'         => $banner,
         ]);
     }
 

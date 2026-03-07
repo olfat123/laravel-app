@@ -15,45 +15,71 @@ const DEPT_COLORS = [
     'from-yellow-500 to-orange-600',
 ];
 
-export default function Home({ departments, featuredProducts, mostSellingProducts, latestViewedProducts, latestPosts }) {
+export default function Home({ departments, featuredCategories, featuredProducts, mostSellingProducts, latestViewedProducts, latestPosts, hero, sections }) {
     const t = useTrans();
     const locale = useLocale();
+
+    // Fall back to i18n strings when the DB setting is empty
+    const heroBadge      = hero?.badge            || t('home.hero.badge');
+    const heroHeading    = hero?.heading           || t('home.hero.headline');
+    const heroHeading2   = hero?.heading2          || t('home.hero.headline2');
+    const heroSubtext    = hero?.subtext           || t('home.hero.subtext');
+    const heroCtaShop    = hero?.cta_shop_label    || t('home.hero.cta_shop');
+    const heroCtaBrowse  = hero?.cta_browse_label  || t('home.hero.cta_browse');
+    const heroBgImage    = hero?.bg_image_url      || '';
+
+    const showDepts     = sections?.departments       !== false;
+    const showFeatured  = sections?.featured_products !== false;
+    const showBest      = sections?.best_sellers      !== false;
+    const showRecent    = sections?.recently_viewed   !== false;
+    const showBlog      = sections?.blog_posts        !== false;
+
     return (
         <AuthenticatedLayout>
             <Head title="Welcome" />
 
             {/* ── Hero ───────────────────────────────────────────── */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-                {/* decorative blobs */}
-                <div className="pointer-events-none absolute -top-32 -left-32 h-[600px] w-[600px] rounded-full bg-primary/20 blur-3xl" />
-                <div className="pointer-events-none absolute -bottom-32 -right-32 h-[500px] w-[500px] rounded-full bg-secondary/20 blur-3xl" />
+            <section
+                className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+                style={heroBgImage ? { backgroundImage: `url(${heroBgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+            >
+                {/* decorative blobs (hidden when custom bg image is set) */}
+                {!heroBgImage && (
+                    <>
+                        <div className="pointer-events-none absolute -top-32 -left-32 h-[600px] w-[600px] rounded-full bg-primary/20 blur-3xl" />
+                        <div className="pointer-events-none absolute -bottom-32 -right-32 h-[500px] w-[500px] rounded-full bg-secondary/20 blur-3xl" />
+                    </>
+                )}
+                {heroBgImage && <div className="absolute inset-0 bg-slate-900/60" />}
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-28 md:py-40 text-center">
                     <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary text-xs font-semibold uppercase tracking-widest mb-6">
-                        {t('home.hero.badge')}
+                        {heroBadge}
                     </span>
                     <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-white leading-tight">
-                        {t('home.hero.headline')}<br />
+                        {heroHeading}<br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                            {t('home.hero.headline2')}
+                            {heroHeading2}
                         </span>
                     </h1>
-                    <p className="mt-6 text-lg md:text-xl text-slate-400 max-w-2xl mx-auto">
-                        {t('home.hero.subtext')}
-                    </p>
+                    {heroSubtext && (
+                        <p className="mt-6 text-lg md:text-xl text-slate-400 max-w-2xl mx-auto">
+                            {heroSubtext}
+                        </p>
+                    )}
                     <div className="mt-10 flex flex-wrap justify-center gap-4">
                         <Link href={route('shop')} className="btn btn-primary btn-lg px-10 shadow-lg shadow-primary/30">
-                            {t('home.hero.cta_shop')}
+                            {heroCtaShop}
                         </Link>
                         <a href="#departments" className="btn btn-outline btn-lg px-10 text-white border-white/30 hover:bg-white/10 hover:border-white/50">
-                            {t('home.hero.cta_browse')}
+                            {heroCtaBrowse}
                         </a>
                     </div>
                 </div>
             </section>
 
             {/* ── Departments ────────────────────────────────────── */}
-            {departments?.length > 0 && (
+            {showDepts && departments?.length > 0 && (
                 <section id="departments" className="py-20 bg-base-100">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="text-center mb-12">
@@ -86,8 +112,42 @@ export default function Home({ departments, featuredProducts, mostSellingProduct
                 </section>
             )}
 
+            {/* ── Shop by Category ───────────────────────────────── */}
+            {featuredCategories?.length > 0 && (
+                <section className="py-20 bg-base-200">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <SectionHeader
+                            heading={t('home.categories.heading')}
+                            subtext={t('home.categories.subtext')}
+                            viewAllHref={route('shop')}
+                            viewAllLabel={t('home.featured.view_all')}
+                        />
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {featuredCategories.map((cat) => (
+                                <Link
+                                    key={cat.id}
+                                    href={route('shop')}
+                                    className="group relative flex flex-col items-center gap-3 rounded-2xl overflow-hidden bg-base-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-1"
+                                >
+                                    <div className="w-full aspect-square overflow-hidden rounded-xl">
+                                        <img
+                                            src={cat.image_url}
+                                            alt={cat.name}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                    </div>
+                                    <span className="pb-3 text-center text-sm font-semibold text-base-content leading-tight px-2 line-clamp-2">
+                                        {cat.name}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
             {/* ── Featured Products ───────────────────────────────── */}
-            {featuredProducts?.data?.length > 0 && (
+            {showFeatured && featuredProducts?.data?.length > 0 && (
                 <section className="py-20 bg-base-200">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <SectionHeader
@@ -109,7 +169,7 @@ export default function Home({ departments, featuredProducts, mostSellingProduct
             )}
 
             {/* ── Best Sellers ────────────────────────────────────── */}
-            {mostSellingProducts?.data?.length > 0 && (
+            {showBest && mostSellingProducts?.data?.length > 0 && (
                 <section className="py-20 bg-base-100">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <SectionHeader
@@ -128,7 +188,7 @@ export default function Home({ departments, featuredProducts, mostSellingProduct
             )}
 
             {/* ── Recently Viewed ─────────────────────────────────── */}
-            {latestViewedProducts?.data?.length > 0 && (
+            {showRecent && latestViewedProducts?.data?.length > 0 && (
                 <section className="py-20 bg-base-200">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <SectionHeader
@@ -145,7 +205,7 @@ export default function Home({ departments, featuredProducts, mostSellingProduct
             )}
 
             {/* ── Latest Blog Posts ───────────────────────────────── */}
-            {latestPosts?.data?.length > 0 && (
+            {showBlog && latestPosts?.data?.length > 0 && (
                 <section className="py-20 bg-base-100">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <SectionHeader

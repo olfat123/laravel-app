@@ -78,12 +78,12 @@ export default function ProductItem({ product }) {
 
                 {/* Store / Department */}
                 <p className="text-xs text-base-content/50 truncate">
-                    {product.user.store_slug ? (
+                    {product.user?.store_slug ? (
                         <Link href={route('store.show', product.user.store_slug)} className="hover:text-primary transition-colors">
                             {product.user.name}
                         </Link>
-                    ) : product.user.name}
-                    {' · '}{product.department.name}
+                    ) : product.user?.name}
+                    {product.department?.name && <>{' · '}{product.department.name}</>}
                 </p>
 
                 {/* Star rating */}

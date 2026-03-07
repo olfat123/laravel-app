@@ -12,10 +12,13 @@ use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductListResource;
 use App\Http\Resources\PostListResource;
 use App\Models\Post;
+use App\Models\Category;
 use App\Models\ProductView;
 use App\Models\ProductReview;
 use App\Models\OrderItem;
+use App\Models\Setting;
 use App\Enums\OrderStatusEnum;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -44,14 +47,49 @@ class ProductController extends Controller
             ->take(8)
             ->get();
 
+        $heroBgPath = Setting::get('hero_bg_image_url', '');
+        $hero = [
+            'badge'            => Setting::get('hero_badge', 'New Collection'),
+            'heading'          => Setting::get('hero_heading', 'Discover Your'),
+            'heading2'         => Setting::get('hero_heading2', 'Perfect Style'),
+            'subtext'          => Setting::get('hero_subtext', ''),
+            'cta_shop_label'   => Setting::get('hero_cta_shop_label', 'Shop Now'),
+            'cta_browse_label' => Setting::get('hero_cta_browse_label', 'Browse Departments'),
+            'bg_image_url'     => $heroBgPath ? Storage::url($heroBgPath) : '',
+        ];
+
+        $sections = [
+            'departments'       => Setting::get('show_departments', '1') === '1',
+            'featured_products' => Setting::get('show_featured_products', '1') === '1',
+            'best_sellers'      => Setting::get('show_best_sellers', '1') === '1',
+            'recently_viewed'   => Setting::get('show_recently_viewed', '1') === '1',
+            'blog_posts'        => Setting::get('show_blog_posts', '1') === '1',
+        ];
+
+        $featuredCategories = Category::where('active', true)
+            ->whereNotNull('image')
+            ->with('department:id,name')
+            ->orderBy('name')
+            ->take(12)
+            ->get()
+            ->map(fn ($c) => [
+                'id'         => $c->id,
+                'name'       => $c->name,
+                'image_url'  => Storage::url($c->image),
+                'department' => $c->department?->name,
+            ]);
+
         return Inertia::render('Home', [
             'departments'          => $departments,
+            'featuredCategories'   => $featuredCategories,
             'featuredProducts'     => ProductListResource::collection($featuredProducts),
             'mostSellingProducts'  => ProductListResource::collection($mostSellingProducts),
             'latestViewedProducts' => ProductListResource::collection($this->getRecentlyViewedProducts()),
             'latestPosts'          => PostListResource::collection(
                 Post::published()->with(['author', 'category'])->latest('published_at')->take(3)->get()
             ),
+            'hero'     => $hero,
+            'sections' => $sections,
         ]);
     }
 

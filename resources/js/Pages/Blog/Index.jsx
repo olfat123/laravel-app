@@ -73,12 +73,16 @@ function PostCard({ post }) {
     );
 }
 
-export default function BlogIndex({ posts, categories, activeCategory }) {
+export default function BlogIndex({ posts, categories, activeCategory, banner }) {
     const t      = useTrans();
     const locale = useLocale();
 
     const items = posts?.data ?? [];
     const meta  = posts?.meta ?? {};
+
+    const bannerTitle    = banner?.title    || t('blog.heading');
+    const bannerSubtitle = banner?.subtitle || t('blog.subtitle');
+    const bannerImage    = banner?.image_url || '';
 
     function filterCategory(slug) {
         router.get(route('blog.index'), slug ? { category: slug } : {}, { preserveScroll: false });
@@ -89,15 +93,25 @@ export default function BlogIndex({ posts, categories, activeCategory }) {
             <Head title={t('blog.page_title')} />
 
             {/* Hero banner */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-24 text-center">
-                <div className="pointer-events-none absolute -top-24 -left-24 h-[400px] w-[400px] rounded-full bg-primary/20 blur-3xl" />
-                <div className="pointer-events-none absolute -bottom-24 -right-24 h-[350px] w-[350px] rounded-full bg-secondary/20 blur-3xl" />
+            <section
+                className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-24 text-center"
+                style={bannerImage ? { backgroundImage: `url(${bannerImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+            >
+                {!bannerImage && (
+                    <>
+                        <div className="pointer-events-none absolute -top-24 -left-24 h-[400px] w-[400px] rounded-full bg-primary/20 blur-3xl" />
+                        <div className="pointer-events-none absolute -bottom-24 -right-24 h-[350px] w-[350px] rounded-full bg-secondary/20 blur-3xl" />
+                    </>
+                )}
+                {bannerImage && <div className="absolute inset-0 bg-slate-900/60" />}
                 <div className="relative max-w-3xl mx-auto px-4">
                     <span className="inline-block px-4 py-1 rounded-full bg-primary/20 text-primary text-xs font-semibold uppercase tracking-widest mb-4">
                         {t('blog.badge')}
                     </span>
-                    <h1 className="text-4xl md:text-6xl font-extrabold text-white">{t('blog.heading')}</h1>
-                    <p className="mt-4 text-slate-400 text-lg max-w-xl mx-auto">{t('blog.subtitle')}</p>
+                    <h1 className="text-4xl md:text-6xl font-extrabold text-white">{bannerTitle}</h1>
+                    {bannerSubtitle && (
+                        <p className="mt-4 text-slate-400 text-lg max-w-xl mx-auto">{bannerSubtitle}</p>
+                    )}
                 </div>
             </section>
 

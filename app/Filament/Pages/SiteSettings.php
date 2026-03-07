@@ -37,9 +37,30 @@ class SiteSettings extends Page implements HasForms
             'website_commission'  => (float) Setting::get('website_commission', 0),
             'tax_rate'            => (float) Setting::get('tax_rate', 0),
             'prices_include_tax'  => (bool) (Setting::get('prices_include_tax', '0') === '1'),
-            'currency'          => Setting::get('currency', 'USD'),
-            'enabled_languages' => json_decode(Setting::get('enabled_languages', '["en","ar"]'), true),
-            'default_language'  => Setting::get('default_language', 'en'),
+            'currency'            => Setting::get('currency', 'USD'),
+            'enabled_languages'   => json_decode(Setting::get('enabled_languages', '["en","ar"]'), true),
+            'default_language'    => Setting::get('default_language', 'en'),
+
+            // Hero
+            'hero_badge'            => Setting::get('hero_badge', 'New Collection'),
+            'hero_heading'          => Setting::get('hero_heading', 'Discover Your'),
+            'hero_heading2'         => Setting::get('hero_heading2', 'Perfect Style'),
+            'hero_subtext'          => Setting::get('hero_subtext', ''),
+            'hero_cta_shop_label'   => Setting::get('hero_cta_shop_label', 'Shop Now'),
+            'hero_cta_browse_label' => Setting::get('hero_cta_browse_label', 'Browse Departments'),
+            'hero_bg_image_url'     => Setting::get('hero_bg_image_url', ''),
+
+            // Blog banner
+            'blog_banner_title'     => Setting::get('blog_banner_title', 'Stories, Tips & Style Guides'),
+            'blog_banner_subtitle'  => Setting::get('blog_banner_subtitle', ''),
+            'blog_banner_image_url' => Setting::get('blog_banner_image_url', ''),
+
+            // Section visibility toggles
+            'show_departments'       => Setting::get('show_departments', '1') === '1',
+            'show_featured_products' => Setting::get('show_featured_products', '1') === '1',
+            'show_best_sellers'      => Setting::get('show_best_sellers', '1') === '1',
+            'show_recently_viewed'   => Setting::get('show_recently_viewed', '1') === '1',
+            'show_blog_posts'        => Setting::get('show_blog_posts', '1') === '1',
         ]);
     }
 
@@ -131,6 +152,113 @@ class SiteSettings extends Page implements HasForms
                             ->helperText('Applied to new visitors who have not yet set a preference.'),
                     ])
                     ->columns(2),
+
+                // ── Homepage Hero ────────────────────────────────────────────
+                Forms\Components\Section::make('Homepage Hero')
+                    ->description('Customise the full-width hero banner shown at the top of the homepage.')
+                    ->collapsible()
+                    ->schema([
+                        Forms\Components\TextInput::make('hero_badge')
+                            ->label('Badge Text')
+                            ->maxLength(60)
+                            ->helperText('Small pill label above the headline (e.g. "New Collection").'),
+
+                        Forms\Components\TextInput::make('hero_heading')
+                            ->label('Headline Line 1')
+                            ->maxLength(100)
+                            ->helperText('First line of the main headline in white.'),
+
+                        Forms\Components\TextInput::make('hero_heading2')
+                            ->label('Headline Line 2 (gradient)')
+                            ->maxLength(100)
+                            ->helperText('Second line shown with a primary→secondary colour gradient.'),
+
+                        Forms\Components\Textarea::make('hero_subtext')
+                            ->label('Subtext')
+                            ->rows(2)
+                            ->maxLength(300)
+                            ->helperText('Short paragraph below the headline.'),
+
+                        Forms\Components\TextInput::make('hero_cta_shop_label')
+                            ->label('Primary CTA Label')
+                            ->maxLength(50)
+                            ->helperText('Label for the "Shop Now" button.'),
+
+                        Forms\Components\TextInput::make('hero_cta_browse_label')
+                            ->label('Secondary CTA Label')
+                            ->maxLength(50)
+                            ->helperText('Label for the "Browse Departments" button.'),
+
+                        Forms\Components\FileUpload::make('hero_bg_image_url')
+                            ->label('Background Image')
+                            ->image()
+                            ->disk('public')
+                            ->directory('settings/hero')
+                            ->imageResizeMode('cover')
+                            ->imageCropAspectRatio('16:9')
+                            ->imageResizeTargetWidth('1920')
+                            ->imageResizeTargetHeight('1080')
+                            ->maxSize(8192)
+                            ->helperText('Optional. Recommended 1920×1080 px. Leave blank to use the default gradient.')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+
+                // ── Blog Banner ──────────────────────────────────────────────
+                Forms\Components\Section::make('Blog Banner')
+                    ->description('Customise the hero banner shown at the top of the blog listing page.')
+                    ->collapsible()
+                    ->schema([
+                        Forms\Components\TextInput::make('blog_banner_title')
+                            ->label('Banner Title')
+                            ->maxLength(120),
+
+                        Forms\Components\Textarea::make('blog_banner_subtitle')
+                            ->label('Banner Subtitle')
+                            ->rows(2)
+                            ->maxLength(300),
+
+                        Forms\Components\FileUpload::make('blog_banner_image_url')
+                            ->label('Background Image')
+                            ->image()
+                            ->disk('public')
+                            ->directory('settings/blog')
+                            ->imageResizeMode('cover')
+                            ->imageCropAspectRatio('16:9')
+                            ->imageResizeTargetWidth('1920')
+                            ->imageResizeTargetHeight('1080')
+                            ->maxSize(8192)
+                            ->helperText('Optional. Leave blank to use the default gradient background.')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(1),
+
+                // ── Homepage Section Visibility ──────────────────────────────
+                Forms\Components\Section::make('Homepage Sections')
+                    ->description('Toggle each homepage section on or off.')
+                    ->collapsible()
+                    ->schema([
+                        Forms\Components\Toggle::make('show_departments')
+                            ->label('Show Departments')
+                            ->helperText('Show the departments grid on the homepage.'),
+
+                        Forms\Components\Toggle::make('show_featured_products')
+                            ->label('Show Featured Products')
+                            ->helperText('Show the featured products section.'),
+
+                        Forms\Components\Toggle::make('show_best_sellers')
+                            ->label('Show Best Sellers')
+                            ->helperText('Show the best-selling products section.'),
+
+                        Forms\Components\Toggle::make('show_recently_viewed')
+                            ->label('Show Recently Viewed')
+                            ->helperText('Show the recently viewed products section (only visible to logged-in users).'),
+
+                        Forms\Components\Toggle::make('show_blog_posts')
+                            ->label('Show Latest Blog Posts')
+                            ->helperText('Show the latest blog posts snippet on the homepage.'),
+                    ])
+                    ->columns(2),
             ])
             ->statePath('data');
     }
@@ -139,15 +267,38 @@ class SiteSettings extends Page implements HasForms
     {
         $data = $this->form->getState();
 
+        // ── Commerce ────────────────────────────────────────────────────────
         Setting::set('website_commission', $data['website_commission']);
         Setting::set('tax_rate',            $data['tax_rate']);
         Setting::set('prices_include_tax',  $data['prices_include_tax'] ? '1' : '0');
-        Setting::set('currency',          $data['currency']);
+
+        // ── Currency & Languages ─────────────────────────────────────────────
+        Setting::set('currency', $data['currency']);
         $enabledLangs = array_values((array) $data['enabled_languages']);
         Setting::set('enabled_languages', json_encode($enabledLangs));
-        // If only one language is enabled it becomes the default automatically.
         $defaultLang = count($enabledLangs) === 1 ? $enabledLangs[0] : $data['default_language'];
-        Setting::set('default_language',  $defaultLang);
+        Setting::set('default_language', $defaultLang);
+
+        // ── Hero ─────────────────────────────────────────────────────────────
+        Setting::set('hero_badge',            $data['hero_badge'] ?? '');
+        Setting::set('hero_heading',          $data['hero_heading'] ?? '');
+        Setting::set('hero_heading2',         $data['hero_heading2'] ?? '');
+        Setting::set('hero_subtext',          $data['hero_subtext'] ?? '');
+        Setting::set('hero_cta_shop_label',   $data['hero_cta_shop_label'] ?? '');
+        Setting::set('hero_cta_browse_label', $data['hero_cta_browse_label'] ?? '');
+        Setting::set('hero_bg_image_url',     $this->resolveUploadedPath($data['hero_bg_image_url'] ?? null));
+
+        // ── Blog Banner ──────────────────────────────────────────────────────
+        Setting::set('blog_banner_title',     $data['blog_banner_title'] ?? '');
+        Setting::set('blog_banner_subtitle',  $data['blog_banner_subtitle'] ?? '');
+        Setting::set('blog_banner_image_url', $this->resolveUploadedPath($data['blog_banner_image_url'] ?? null));
+
+        // ── Section Toggles ──────────────────────────────────────────────────
+        Setting::set('show_departments',       $data['show_departments'] ? '1' : '0');
+        Setting::set('show_featured_products', $data['show_featured_products'] ? '1' : '0');
+        Setting::set('show_best_sellers',      $data['show_best_sellers'] ? '1' : '0');
+        Setting::set('show_recently_viewed',   $data['show_recently_viewed'] ? '1' : '0');
+        Setting::set('show_blog_posts',        $data['show_blog_posts'] ? '1' : '0');
 
         Cache::forget('site_settings');
 
@@ -155,6 +306,15 @@ class SiteSettings extends Page implements HasForms
             ->title('Settings saved.')
             ->success()
             ->send();
+    }
+
+    /** Normalise a FileUpload state value to a plain path string or empty. */
+    private function resolveUploadedPath(mixed $value): string
+    {
+        if (is_array($value)) {
+            $value = array_values(array_filter($value))[0] ?? null;
+        }
+        return $value ?? '';
     }
 
     public function recalculateOrders(): void

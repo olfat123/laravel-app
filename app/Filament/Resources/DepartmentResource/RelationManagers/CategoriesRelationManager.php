@@ -7,8 +7,6 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Models\Category;
 
 class CategoriesRelationManager extends RelationManager
@@ -22,19 +20,38 @@ class CategoriesRelationManager extends RelationManager
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->columnSpan(2),
+
+                Forms\Components\FileUpload::make('image')
+                    ->label('Category Image')
+                    ->image()
+                    ->disk('public')
+                    ->directory('categories')
+                    ->imageResizeMode('cover')
+                    ->imageCropAspectRatio('4:3')
+                    ->imageResizeTargetWidth('800')
+                    ->imageResizeTargetHeight('600')
+                    ->maxSize(4096)
+                    ->helperText('Recommended: 800×600 px. Used in the "Shop by Category" section.')
+                    ->columnSpan(2),
+
                 Forms\Components\Select::make('parent_id')
-                    ->options(function () use ($department) {
-                        return Category::where('department_id', $department->id)->pluck('name', 'id')->toArray();
-                    })
+                    ->options(fn () => Category::where('department_id', $department->id)
+                        ->whereNull('parent_id')
+                        ->pluck('name', 'id')
+                        ->toArray())
                     ->label('Parent Category')
                     ->searchable()
                     ->preload()
                     ->native(false)
-                    ->required(false),
-                Forms\Components\Checkbox::make('active')
-                    ->default(true),
-            ]);
+                    ->placeholder('— None (top-level) —'),
+
+                Forms\Components\Toggle::make('active')
+                    ->default(true)
+                    ->inline(false),
+            ])
+            ->columns(2);
     }
 
     public function table(Table $table): Table
@@ -42,19 +59,26 @@ class CategoriesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('name')
             ->columns([
+                Tables\Columns\ImageColumn::make('image')
+                    ->disk('public')
+                    ->square()
+                    ->size(48)
+                    ->defaultImageUrl(fn () => null)
+                    ->label(''),
+
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('parent.name')
-                    ->searchable()
+                    ->label('Parent')
+                    ->placeholder('—')
                     ->sortable(),
+
                 Tables\Columns\IconColumn::make('active')
                     ->boolean(),
             ])
-
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->headerActions([
                 Tables\Actions\CreateAction::make(),
             ])
