@@ -34,6 +34,9 @@ class SiteSettings extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
+            'app_logo'    => Setting::get('app_logo', ''),
+            'app_favicon' => Setting::get('app_favicon', ''),
+
             'website_commission'  => (float) Setting::get('website_commission', 0),
             'tax_rate'            => (float) Setting::get('tax_rate', 0),
             'prices_include_tax'  => (bool) (Setting::get('prices_include_tax', '0') === '1'),
@@ -68,6 +71,32 @@ class SiteSettings extends Page implements HasForms
     {
         return $form
             ->schema([
+                // ── Branding ─────────────────────────────────────────────────
+                Forms\Components\Section::make('Branding')
+                    ->description('Upload the site logo shown in the navbar and the favicon shown in the browser tab.')
+                    ->schema([
+                        Forms\Components\FileUpload::make('app_logo')
+                            ->label('App Logo')
+                            ->image()
+                            ->disk('public')
+                            ->directory('settings/branding')
+                            ->maxSize(2048)
+                            ->acceptedFileTypes(['image/png', 'image/svg+xml', 'image/webp', 'image/jpeg'])
+                            ->helperText('Displayed in the navbar. Recommended height: 40 px. Formats: PNG, SVG, WebP.')
+                            ->columnSpanFull(),
+
+                        Forms\Components\FileUpload::make('app_favicon')
+                            ->label('Favicon')
+                            ->image()
+                            ->disk('public')
+                            ->directory('settings/branding')
+                            ->maxSize(512)
+                            ->acceptedFileTypes(['image/x-icon', 'image/png', 'image/svg+xml'])
+                            ->helperText('Shown in browser tabs & bookmarks. Recommended 32×32 or 64×64 px. ICO, PNG or SVG.')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+
                 Forms\Components\Section::make('Commission Settings')
                     ->description('Configure the platform commission deducted from each order before paying out the vendor.')
                     ->schema([
@@ -266,6 +295,10 @@ class SiteSettings extends Page implements HasForms
     public function save(): void
     {
         $data = $this->form->getState();
+
+        // ── Branding ─────────────────────────────────────────────────────────
+        Setting::set('app_logo',    $this->resolveUploadedPath($data['app_logo'] ?? null));
+        Setting::set('app_favicon', $this->resolveUploadedPath($data['app_favicon'] ?? null));
 
         // ── Commerce ────────────────────────────────────────────────────────
         Setting::set('website_commission', $data['website_commission']);

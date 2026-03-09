@@ -39,12 +39,15 @@ class HandleInertiaRequests extends Middleware
         $siteSettings = Cache::rememberForever('site_settings', function () {
             $rows = Setting::whereIn('key', [
                 'currency', 'enabled_languages', 'default_language',
+                'app_logo', 'app_favicon',
             ])->pluck('value', 'key');
 
             return [
                 'currency'          => $rows->get('currency', 'USD'),
                 'available_locales' => json_decode($rows->get('enabled_languages', '["en","ar"]'), true) ?: ['en'],
                 'default_language'  => $rows->get('default_language', 'en'),
+                'app_logo'          => $rows->get('app_logo', ''),
+                'app_favicon'       => $rows->get('app_favicon', ''),
             ];
         });
 
@@ -117,6 +120,8 @@ class HandleInertiaRequests extends Middleware
             'currency'         => $siteSettings['currency'],
             'currencyLocale'   => $localeToCurrencyLocale[$locale] ?? 'en-US',
             'availableLocales' => $availableLocales,
+            'app_logo'         => $siteSettings['app_logo'] ?? '',
+            'app_favicon'      => $siteSettings['app_favicon'] ?? '',
         ];
     }
 

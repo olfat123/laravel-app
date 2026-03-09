@@ -5,7 +5,7 @@ import { productRoute } from '@/Helper';
 import { useTrans, useLocale } from '@/i18n';
 
 export default function Navbar() {
-    const { auth, totalQuantity, totalPrice, cartItems, availableLocales = ['en', 'ar'] } = usePage().props;
+    const { auth, totalQuantity, totalPrice, cartItems, availableLocales = ['en', 'ar'], app_logo } = usePage().props;
     const user = auth.user;
     const t = useTrans();
     const locale = useLocale();
@@ -32,8 +32,11 @@ export default function Navbar() {
 
                 {/* Brand + primary nav */}
                 <div className="flex-1 flex items-center gap-1">
-                    <Link href={route('home')} className="btn btn-ghost text-xl font-extrabold tracking-tight text-primary px-2">
-                        {t('nav.brand')}
+                    <Link href={route('home')} className="btn btn-ghost px-2 flex items-center">
+                        {app_logo
+                            ? <img src={`/storage/${app_logo}`} alt={t('nav.brand')} className="h-8 max-w-[140px] object-contain" />
+                            : <span className="text-xl font-extrabold tracking-tight text-primary">{t('nav.brand')}</span>
+                        }
                     </Link>
                     <div className="hidden sm:flex items-center gap-1 ms-2">
                         <Link href={route('shop')} className="btn btn-ghost btn-sm font-medium">{t('nav.shop')}</Link>
