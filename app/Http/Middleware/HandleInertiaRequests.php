@@ -74,6 +74,21 @@ class HandleInertiaRequests extends Middleware
             ? json_decode(file_get_contents($translationPath), true)
             : [];
 
+        // Load all PHP array files from lang/{locale}/ and merge as flat dot-
+        // notation keys so the JS t() helper can look them up directly.
+        $phpLangDir = base_path("lang/{$locale}");
+        if (is_dir($phpLangDir)) {
+            foreach (glob("{$phpLangDir}/*.php") as $file) {
+                $namespace = basename($file, '.php');
+                $data      = require $file;
+                if (is_array($data)) {
+                    foreach (self::flattenDot($data, $namespace) as $k => $v) {
+                        $translations[$k] = $v;
+                    }
+                }
+            }
+        }
+
         $cartService = app(CartService::class);
         $totalQuantity = $cartService->getTotalQuantity();
         $totalPrice = $cartService->getTotalPrice();
@@ -103,5 +118,23 @@ class HandleInertiaRequests extends Middleware
             'currencyLocale'   => $localeToCurrencyLocale[$locale] ?? 'en-US',
             'availableLocales' => $availableLocales,
         ];
+    }
+
+    /**
+     * Recursively flatten a nested array into dot-notation keys.
+     * e.g. ['cart' => ['items' => 'x']] with prefix 'nav' → ['nav.cart.items' => 'x']
+     */
+    private static function flattenDot(array $array, string $prefix = ''): array
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
+            $fullKey = $prefix !== '' ? "{$prefix}.{$key}" : $key;
+            if (is_array($value)) {
+                $result += self::flattenDot($value, $fullKey);
+            } else {
+                $result[$fullKey] = $value;
+            }
+        }
+        return $result;
     }
 }

@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'search_label' => 'بحث',
+    'search_placeholder' => 'ابحث عن منتجات…',
+    'department_label' => 'القسم',
+    'department_all' => 'جميع الأقسام',
+    'category_label' => 'الفئة',
+    'category_all' => 'جميع الفئات',
+    'store_label' => 'المتجر',
+    'store_all' => 'جميع المتاجر',
+    'price_range_label' => 'نطاق السعر',
+    'price_min_placeholder' => 'الحد الأدنى',
+    'price_max_placeholder' => 'الحد الأقصى',
+    'clear_all' => 'مسح جميع الفلاتر',
+    'search' => 'بحث',
+    'department' => 'القسم',
+    'all_departments' => 'جميع الأقسام',
+    'category' => 'الفئة',
+    'all_categories' => 'جميع الفئات',
+    'store' => 'المتجر',
+    'all_stores' => 'جميع المتاجر',
+    'price_range' => 'نطاق السعر',
+    'min' => 'الحد الأدنى',
+    'max' => 'الحد الأقصى',
+];

@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'search_label' => 'Search',
+    'search_placeholder' => 'Search products…',
+    'department_label' => 'Department',
+    'department_all' => 'All Departments',
+    'category_label' => 'Category',
+    'category_all' => 'All Categories',
+    'store_label' => 'Store',
+    'store_all' => 'All Stores',
+    'price_range_label' => 'Price Range',
+    'price_min_placeholder' => 'Min',
+    'price_max_placeholder' => 'Max',
+    'clear_all' => 'Clear all filters',
+    'search' => 'Search',
+    'department' => 'Department',
+    'all_departments' => 'All Departments',
+    'category' => 'Category',
+    'all_categories' => 'All Categories',
+    'store' => 'Store',
+    'all_stores' => 'All Stores',
+    'price_range' => 'Price Range',
+    'min' => 'Min',
+    'max' => 'Max',
+];

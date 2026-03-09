@@ -1,0 +1,78 @@
+<?php
+
+return [
+    'confirm_password' => 'Confirm Password',
+    'reset_password' => [
+        'title' => 'Reset Password',
+        'field' => [
+            'email' => 'Email',
+            'password' => 'Password',
+            'confirm_password' => 'Confirm Password',
+        ],
+        'btn' => 'Reset Password',
+    ],
+    'verify_email' => [
+        'title' => 'Email Verification',
+        'description' => 'Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.',
+        'link_sent' => 'A new verification link has been sent to the email address you provided during registration.',
+        'btn_resend' => 'Resend Verification Email',
+        'btn_logout' => 'Log Out',
+        'resend_btn' => 'Resend Verification Email',
+        'logout' => 'Log Out',
+    ],
+    'forgot_password' => [
+        'title' => 'Forgot Password',
+        'description' => 'Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.',
+        'btn' => 'Email Password Reset Link',
+    ],
+    'login' => [
+        'title' => 'Log in',
+        'field' => [
+            'email' => 'Email',
+            'password' => 'Password',
+        ],
+        'remember_me' => 'Remember me',
+        'forgot_password' => 'Forgot your password?',
+        'btn' => 'Log in',
+    ],
+    'register' => [
+        'title' => 'Register',
+        'role_label' => 'I want to register as',
+        'role' => [
+            'customer_label' => 'Customer',
+            'customer_desc' => 'Browse and buy products',
+            'vendor_label' => 'Vendor',
+            'vendor_desc' => 'Sell products on the platform',
+        ],
+        'field' => [
+            'full_name' => 'Full Name',
+            'email' => 'Email',
+            'password' => 'Password',
+            'confirm_password' => 'Confirm Password',
+            'store_name' => 'Store Name *',
+            'store_address' => 'Store Address',
+        ],
+        'store_details_heading' => 'Store Details',
+        'placeholder' => [
+            'store_name' => 'e.g. My Awesome Store',
+            'store_address' => 'Your store\'s address (optional)',
+        ],
+        'vendor_notice' => 'Your account will be reviewed by an admin before you can start selling.',
+        'already_registered' => 'Already registered?',
+        'btn_customer' => 'Create Account',
+        'btn_vendor' => 'Create Vendor Account',
+        'register_as' => 'I want to register as',
+        'customer' => 'Customer',
+        'customer_desc' => 'Browse and buy products',
+        'vendor' => 'Vendor',
+        'vendor_desc' => 'Sell products on the platform',
+        'store_details' => 'Store Details',
+        'store_name' => 'Store Name *',
+        'store_address' => 'Store Address',
+        'vendor_review' => 'Your account will be reviewed by an admin before you can start selling.',
+        'create_account' => 'Create Account',
+        'create_vendor' => 'Create Vendor Account',
+    ],
+    'email' => 'Email',
+    'password' => 'Password',
+];
